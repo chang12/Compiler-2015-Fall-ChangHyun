@@ -38,17 +38,21 @@ ID					{letter}{alnum}+
 
 OP					"("|")"|"["|"]"|"{"|"}"|"->"|"."|","|".."|"\\"|"!"|"~"|"++"|"--"|"*"|"/"|"%"|"+"|"-"|"<<"|">>"|"<"|"<="|">"|">="|"=="|"!="|"&"|"^"|"|"|"&&"|"||"|"?"|":"|";"|"="|"+="|"-="|"*="|"/="|"%="|"&="|"^="|"|="|"<<="|">>="
 
+commentstart		"/*"
+commentend			"*/"
+
 %start AA BB
 
 %%
-{letter}			{printf("Letter");}
-{alnum}				{printf("Alnum");}
-{floatconstant}		{printf("float!!");}
 
-{OP}				{printf("OP\t%s\n",yytext);}
+<AA>{OP}				{printf("OP\t%s\n", yytext);}
 
-{ID}				{}
+<AA>{commentstart}		{commentdepth++; BEGIN BB;}
+<BB>{commentstart}		{commentdepth++;}
+<BB>{commentend}		{commentdepth--; if(commentdepth==0) BEGIN AA;}
 
+<AA>.					{}
+<BB>.					{}
 %%
 
 
