@@ -17,9 +17,10 @@
 /**************************************************************/
 /* This section will appear at the head of lex.yy.c/lex.yy.cc */
 /**************************************************************/
+#define KEYWORD 	0
+#define IDENFITIER	1
 
-#include "subc.h"
-#include "hash.c"
+#include "hash.h"
 /***************************************************************
 {Other useful code segments can be here.}
 ***************************************************************/
@@ -35,7 +36,7 @@ floatconstant		{digit}+.{digit}*([eE][+-]?{digit}+)?
 
 ID					{letter}{alnum}+
 
-prac				"("|")"
+OP					"("|")"|"["|"]"|"{"|"}"|"->"|"."|","|".."|"\\"|"!"|"~"|"++"|"--"|"*"|"/"|"%"|"+"|"-"|"<<"|">>"|"<"|"<="|">"|">="|"=="|"!="|"&"|"^"|"|"|"&&"|"||"|"?"|":"|";"|"="|"+="|"-="|"*="|"/="|"%="|"&="|"^="|"|="|"<<="|">>="
 
 %start AA BB
 
@@ -44,7 +45,9 @@ prac				"("|")"
 {alnum}				{printf("Alnum");}
 {floatconstant}		{printf("float!!");}
 
-{prac}				{printf("parenthesis");}
+{OP}				{printf("OP\t%s\n",yytext);}
+
+{ID}				{}
 
 %%
 
@@ -64,7 +67,7 @@ void initHash()
 
 	// Initilize Hash Table with Keywords 
 	for (i = 0; strcmp(keyWord[i], "\0") !=0; i++) {
-		enter(KEYWORD, keyWord[i], strlen(keyWord[i]));		
+		enter(KEYWORD, keyWord[i], strlen(keyWord[i]));
 	}
 }
 

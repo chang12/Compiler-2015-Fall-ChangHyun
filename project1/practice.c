@@ -61,7 +61,8 @@ void main() {
 	int count_back = id_back->count;
 
 	printf("count: %d\n",count_back);
-	
+
+
 
 
 	/*
@@ -78,6 +79,5 @@ void main() {
 	//entity_back->count += 1;
 	//int count_back = entity_back->count;
 
-	printf("count: %d\n",count_back);
 	*/
 }

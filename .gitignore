@@ -1,0 +1,10 @@
+*.out
+*.swp
+
+project1/lex.yy.c
+project1/lex.yy.o
+project1/hash.o
+project1/hash.c~
+project1/subc
+project1/test.c
+
