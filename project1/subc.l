@@ -17,8 +17,6 @@
 /**************************************************************/
 /* This section will appear at the head of lex.yy.c/lex.yy.cc */
 /**************************************************************/
-#define KEYWORD 	0
-#define IDENFITIER	1
 
 #include "hash.h"
 /***************************************************************
@@ -53,6 +51,8 @@ commentend			"*/"
 
 <AA>.					{}
 <BB>.					{}
+
+<AA>{ID}				{id* data = enter(IDENTIFIER, yytext,yyleng ); printf("%s\t%s\t%d\n",data->tokentype==KEYWORD?"KEY":"ID",data->name,data->count);}
 %%
 
 
@@ -63,7 +63,7 @@ void initHash()
 	char* keyWord[]={
 		"auto", "break", "case", "char", "continue", "default", "do",
 		"double", "else", "extern", "float", "for", "goto", "if", "int",
-		"long", "register", "return", "short", "sizeof", "static", "struct"
+		"long", "register", "return", "short", "sizeof", "static", "struct",
 		"switch", "typedef", "union", "unsigned", "void", "while", "\0"
 	};
 
