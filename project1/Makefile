@@ -1,6 +1,3 @@
-test: subc
-	./$<
-
 subc: lex.yy.o hash.o
 	gcc -o subc lex.yy.o hash.o -ll
 

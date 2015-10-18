@@ -20,7 +20,8 @@
 
 #include "hash.h"
 /***************************************************************
-{Other useful code segments can be here.}
+AA : Normal state
+BB : Comment state
 ***************************************************************/
 int commentdepth=0;
 %}
@@ -30,9 +31,9 @@ alnum				[A-Za-z0-9_]
 digit				[0-9]
 whitespace			[ \t\n]
 integerconstant		([1-9]+{digit}*)|0
-floatconstant		{digit}+.{digit}*([eE][+-]?{digit}+)?
+floatconstant		{digit}+"."{digit}*([eE][+-]?{digit}+)?
 
-ID					{letter}{alnum}+
+ID					{letter}{alnum}*
 
 OP					"("|")"|"["|"]"|"{"|"}"|"->"|"."|","|".."|"\\"|"!"|"~"|"++"|"--"|"*"|"/"|"%"|"+"|"-"|"<<"|">>"|"<"|"<="|">"|">="|"=="|"!="|"&"|"^"|"|"|"&&"|"||"|"?"|":"|";"|"="|"+="|"-="|"*="|"/="|"%="|"&="|"^="|"|="|"<<="|">>="
 
@@ -43,16 +44,22 @@ commentend			"*/"
 
 %%
 
-<AA>{OP}				{printf("OP\t%s\n", yytext);}
+<AA>{integerconstant}/".."	{printf("INT\t%s\n", yytext);}
+<AA>{integerconstant}		{printf("INT\t%s\n", yytext);}
+<AA>{floatconstant}			{printf("F\t%s\n", yytext);}
 
-<AA>{commentstart}		{commentdepth++; BEGIN BB;}
-<BB>{commentstart}		{commentdepth++;}
-<BB>{commentend}		{commentdepth--; if(commentdepth==0) BEGIN AA;}
+<AA>{OP}					{printf("OP\t%s\n", yytext);}
+<AA>{whitespace}			{}
 
-<AA>.					{}
-<BB>.					{}
+<AA>{commentstart}			{commentdepth++; BEGIN BB;}
+<BB>{commentstart}			{commentdepth++;}
+<BB>{commentend}			{commentdepth--; if(commentdepth==0) BEGIN AA;}
 
-<AA>{ID}				{id* data = enter(IDENTIFIER, yytext,yyleng ); printf("%s\t%s\t%d\n",data->tokentype==KEYWORD?"KEY":"ID",data->name,data->count);}
+<AA>{ID}					{id* data = enter(IDENTIFIER, yytext, yyleng); printf("%s\t%s\t%d\n",data->tokentype==KEYWORD?"KEY":"ID",data->name,data->count);}
+
+<AA>.						{}
+<BB>.						{}
+
 %%
 
 
@@ -67,6 +74,7 @@ void initHash()
 		"switch", "typedef", "union", "unsigned", "void", "while", "\0"
 	};
 
+	// Create hash table with size 100
 	hcreate(100);
 
 	// Initilize Hash Table with Keywords 

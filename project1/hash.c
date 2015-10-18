@@ -6,9 +6,16 @@
 
 id* enter(int flag, char* str, int length){
 	
+	/************************************************
+	Copy detected identifier or keyword (str) in heap
+	************************************************/
 	char* name = (char*)malloc(sizeof(char));
 	strcpy(name, str);
 
+	/************************************************
+	Use hash table of standard library <search.h>
+	For searching, set name as a key of ENTRY item
+	************************************************/
 	ENTRY item;
 	ENTRY* result;
 
@@ -18,6 +25,16 @@ id* enter(int flag, char* str, int length){
 
 	id* data;
 
+	/****************************************************************************
+	1) result is not null : detected str already exists in hash table
+		- increases count
+		- return result's data to print in main function
+	2) result is null : new identifier
+		- make id entity
+		- save the id entity in heap
+		- save the id entity in hash table
+		- return that id entity
+	****************************************************************************/
 	if(result)
 	{
 		data = result->data;
@@ -40,31 +57,3 @@ id* enter(int flag, char* str, int length){
 
 };
 
-/*
-	id* data = (id*)malloc(sizeof(id));
-	data->tokentype = flag;
-	char* name = (char*)malloc(sizeof(char));
-	strcpy(name, str);
-	data->name = name;
-
-	if(flag==0){
-		id* data = (id*)malloc(sizeof(id));
-		data->tokentype = flag;
-		char* name = (char*)malloc(sizeof(char));
-		strcpy(name, str);
-		data->name = name;
-		data->count = 1;
-
-		ENTRY item;
-		ENTRY* result;
-
-		item.key = name;
-		item.data = data;
-
-		result = hsearch(item, ENTER);
-
-		return data;
-	} else{
-		
-	};
-*/
