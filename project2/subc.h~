@@ -11,16 +11,17 @@
 #include <strings.h>
 
 /* structure for ID */
-typedef struct id {
+struct id {
       char *name;
       int lextype;
-} id;
+};
 
 /* For hash table */
 unsigned hash(char *name);
-id *enter(int lextype, char *str, int length);
-id *lookup(char *name);
+struct id *enter(int lextype, char *name, int length);
+struct id *lookup(char *name);
 
 int read_line();
 
 #endif
+
