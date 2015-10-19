@@ -29,7 +29,8 @@ void 	REDUCE(char* s);
 %left	RELOP
 %left	'+' '-'
 %left	'*' '/' '%' 
-%right	'!' PLUS_PLUS MINUS_MINUS UNARY 
+%right	'!' PLUS_PLUS MINUS_MINUS UNARY
+%right  '[' ']' '(' ')'
 %left 	STRUCTOP
 
 /* Token and Types */
@@ -319,24 +320,28 @@ unary: '(' expr ')'	{
    | STRING	{
 		REDUCE("unary->STRING");
 	}
+	
    | '-' unary	{
 		REDUCE("unary->'-'unary");
-	}
+	} %prec UNARY
    | '!' unary	{
 		REDUCE("unary->'!'unary");
-	}
+	} %prec UNARY
+	
    | unary PLUS_PLUS	{
 		REDUCE("unary->unary PLUS_PLUS");
 	}
    | unary MINUS_MINUS	{
 		REDUCE("unary->unary MINUS_MINUS");
 	}
+	
    | '&' unary	{
 		REDUCE("unary->'&'unary");
-	}
+	} %prec UNARY
    | '*' unary	{
 		REDUCE("unary->'*'unary");
-	}
+	} %prec UNARY
+	
    | unary '[' expr ']'	{
 		REDUCE("unary-> unary '[' expr ']'");
 	}
@@ -349,7 +354,7 @@ unary: '(' expr ')'	{
    | unary '(' ')'	{
 		REDUCE("unary->unary '(' ')'");
 	}
-   ;
+   ; 
 
 args: expr	{
 		REDUCE("args->expr");

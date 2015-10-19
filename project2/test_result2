@@ -1,4 +1,4 @@
-st->epsilon
+ext_def_list->epsilon
 type_specifier->TYPE
 opt_specifier->type_specifier
 funct_decl->ID '(' ')'
