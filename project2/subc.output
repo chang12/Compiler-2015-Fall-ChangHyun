@@ -1,6 +1,3 @@
-State 142 conflicts: 1 shift/reduce
-
-
 Grammar
 
     0 $accept: program $end
@@ -154,12 +151,12 @@ RELOP (262) 64
 PLUS_PLUS (263) 79
 MINUS_MINUS (264) 80
 UNARY (265)
-STRUCTOP (266) 84
-TYPE (267) 12
-STRUCT (268) 14 15
-RETURN (269) 40 41
-IF (270) 43 44
-ELSE (271) 44
+ELSE (266) 44
+STRUCTOP (267) 84
+TYPE (268) 12
+STRUCT (269) 14 15
+RETURN (270) 40 41
+IF (271) 43 44
 WHILE (272) 45
 FOR (273) 46
 BREAK (274) 47
@@ -2017,7 +2014,6 @@ State 142
 
     ELSE  shift, and go to state 146
 
-    ELSE      [reduce using rule 43 (stmt)]
     $default  reduce using rule 43 (stmt)
 
 
