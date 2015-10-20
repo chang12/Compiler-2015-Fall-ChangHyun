@@ -10,13 +10,19 @@
 #include <stdio.h>
 #include <strings.h>
 
-/* structure for ID */
+/* 
+	structure for ID 
+	define id as type named id
+*/
 typedef struct id {
       char *name;
       int lextype;
 } id;
 
-/* For hash table */
+/* 
+	For hash table 
+	In this project code, only use "enter" function
+*/
 unsigned hash(char *name);
 id *enter(int lextype, char *str, int length);
 id *lookup(char *name);

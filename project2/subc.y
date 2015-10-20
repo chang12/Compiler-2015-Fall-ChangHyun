@@ -29,8 +29,10 @@ void 	REDUCE(char* s);
 %left	RELOP
 %left	'+' '-'
 %left	'*' '/' '%' 
+/* Modified associativities*/
 %right	'!' PLUS_PLUS MINUS_MINUS UNARY
 %right  '[' ']' '(' ')' ELSE
+/***************************/
 %left 	STRUCTOP
 
 /* Token and Types */

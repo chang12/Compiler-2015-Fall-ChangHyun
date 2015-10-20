@@ -22,6 +22,7 @@ special-char	\\[nt]
 
 %x COMMENT
 %%
+
 "int" 	|
 "char"			{ return TYPE; }
 "struct" 		{ return STRUCT;}
@@ -49,9 +50,13 @@ special-char	\\[nt]
 "<"		|
 "<="	|
 ">"		|
-">="			{ return RELOP; }
+">="			{ 
+					yylval.stringVal = yytext;
+					return RELOP; }
 "=="	|
-"!="			{ return EQUOP; }
+"!="			{ 
+					yylval.stringVal = yytext;
+					return EQUOP; }
 "++"			{ return PLUS_PLUS; }
 "--"			{ return MINUS_MINUS; }
 "."				{ return STRUCTOP; }
@@ -95,7 +100,10 @@ int read_line()
    
 int main(int argc, char* argv[])
 {
+   // Create STL hash table
    hcreate(101);
+
+   // Initialize hash table
    static char *keyword[] = { "int", "char", "struct", "return", "if", "else", "while", "for", "break", "continue", NULL };
    static int tokentype[] = { TYPE, TYPE, STRUCT, RETURN, IF, ELSE, WHILE, FOR, BREAK, CONTINUE, 0 };
    int i;

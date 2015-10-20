@@ -24,11 +24,18 @@ unsigned hash(char *name) {
 }
 
 id *enter(int lextype, char *str, int length) {
-   /* implementation is given here */
+   /* implementaion is almost same with Project1 Code */
    
+   /****************************************************
+   Copy detected identifier or keyword (str) to heap
+   ****************************************************/
    char* name = (char*)malloc(sizeof(char)*(length+1));
    strncpy(name, str, length);
 
+   /****************************************************
+   Use hash table of STL <search.h>
+   FOr searching, set name as a key of ENTRY item
+   ****************************************************/
    ENTRY item;
    ENTRY* result;
 
@@ -38,6 +45,15 @@ id *enter(int lextype, char *str, int length) {
 
    id* data;
 
+   /***************************************************************
+   1) result isn't null : detected str already exists in hash table
+		- return result's data to lexer
+   2) result is null : new identifier
+   		- make id entity
+		- save the id entity in heap
+		- save the id entity in hash table
+		- return that id entity
+   ***************************************************************/
    if(result)
    {
 		   data = result->data;
