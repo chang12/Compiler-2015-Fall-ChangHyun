@@ -1,4 +1,4 @@
-int main(){
+/*int main(){
 
 	int a;
 	char b;
@@ -11,4 +11,10 @@ int main(){
 	} else {
 		return 0;
 	}
+}*/
+
+int main(){
+	char* s;
+	a = 10;
+	s = "abcd";
 }

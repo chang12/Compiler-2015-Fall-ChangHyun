@@ -45,27 +45,28 @@ extern int yydebug;
 # define YYTOKENTYPE
   enum yytokentype
   {
-    LOGICAL_OR = 258,
-    LOGICAL_AND = 259,
-    EQUOP = 260,
-    RELOP = 261,
-    INCOP = 262,
-    DECOP = 263,
-    STRUCTOP = 264,
-    TYPE = 265,
-    VOID = 266,
-    STRUCT = 267,
-    RETURN = 268,
-    IF = 269,
-    ELSE = 270,
-    WHILE = 271,
-    FOR = 272,
-    BREAK = 273,
-    CONTINUE = 274,
-    ID = 275,
-    CHAR_CONST = 276,
-    STRING = 277,
-    INTEGER_CONST = 278
+    ASSIGNOP = 258,
+    LOGICAL_OR = 259,
+    LOGICAL_AND = 260,
+    EQUOP = 261,
+    RELOP = 262,
+    PLUS_PLUS = 263,
+    MINUS_MINUS = 264,
+    UNARY = 265,
+    ELSE = 266,
+    STRUCTOP = 267,
+    TYPE = 268,
+    STRUCT = 269,
+    RETURN = 270,
+    IF = 271,
+    WHILE = 272,
+    FOR = 273,
+    BREAK = 274,
+    CONTINUE = 275,
+    ID = 276,
+    CHAR_CONST = 277,
+    STRING = 278,
+    INTEGER_CONST = 279
   };
 #endif
 
@@ -76,14 +77,10 @@ union YYSTYPE
 {
 #line 16 "subc.y" /* yacc.c:1909  */
 
-	int				intVal;
-	double			floatval;
-	char			*stringVal;
-	struct id		*idptr;
-	struct decl		*declptr;
-	struct ste		*steptr;
+	int		intVal;
+	char	*stringVal;
 
-#line 87 "subc.tab.h" /* yacc.c:1909  */
+#line 84 "subc.tab.h" /* yacc.c:1909  */
 };
 # define YYSTYPE_IS_TRIVIAL 1
 # define YYSTYPE_IS_DECLARED 1

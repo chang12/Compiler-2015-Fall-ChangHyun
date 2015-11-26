@@ -23,12 +23,9 @@ special-char	\\[nt]
 %x COMMENT
 %%
 
-"int" 	|
-"char"			{ return TYPE; }
-"void"			{ return VOID; }
-"struct" 		{ return STRUCT;}
+"print"			{ return PRINT;}
 {integer_const}	{
-				   yylval.intVal = atoi(yytext);
+				   yylval.intval = atoi(yytext);
 				   return INTEGER_CONST;
 				}
 "return"		{ return RETURN; }
@@ -44,11 +41,11 @@ special-char	\\[nt]
 "<="	|
 ">"		|
 ">="			{ 
-					yylval.stringVal = yytext;
+					yylval.stringval = yytext;
 					return RELOP; }
 "=="	|
 "!="			{ 
-					yylval.stringVal = yytext;
+					yylval.stringval = yytext;
 					return EQUOP; }
 "++"			{ return INCOP; }
 "--"			{ return DECOP; }
@@ -57,17 +54,17 @@ special-char	\\[nt]
 
 {id}	{
 		   struct id *entered  = enter(ID, yytext, yyleng);
-		   yylval.stringVal = entered->name;
+		   yylval.idptr = entered;
 		   return entered->lextype;
 		}
 \"({special-char}|[^\\\"\n])*\"	{
 			/* String Variable */
-		   yylval.stringVal = yytext;
+		   yylval.stringval = yytext;
 		   return STRING;
 		}
 '({special-char}|[^\\'\n])'	{
 			/* Character Variable */
-		   yylval.stringVal = yytext;
+		   yylval.stringval = yytext;
 		   return CHAR_CONST;
 		}
 ","		{ return ','; }
@@ -102,6 +99,8 @@ int main(int argc, char* argv[])
    int i;
    for(i = 0; keyword[i] != NULL; i++)
       enter(tokentype[i], keyword[i], strlen(keyword[i]));
+
+   init_type();
 
    if(argc >= 2) yyin = fopen(argv[1], "r");
    else yyin = stdin;
