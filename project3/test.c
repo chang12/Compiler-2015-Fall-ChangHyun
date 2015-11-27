@@ -14,7 +14,8 @@
 }*/
 
 int main(){
-	char* s;
-	a = 10;
-	s = "abcd";
+	int a;
+	char b;
+	a = -a;
+	b = -b;
 }

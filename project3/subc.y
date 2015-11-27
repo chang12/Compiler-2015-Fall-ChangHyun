@@ -7,6 +7,9 @@
 #include "subc.h"
 #define INT 	100
 #define CHAR	101
+#define PTR		102
+#define VAR		103
+#define CONST	104
 
 int    yylex ();
 int    yyerror (char* s);
@@ -18,6 +21,7 @@ void 	REDUCE(char* s);
 %union {
 	int				intval;
 	char			*stringval;
+	bool			boolval;
 	struct id		*idptr;
 	struct decl		*declptr;
 	struct ste		*steptr;
@@ -38,10 +42,11 @@ void 	REDUCE(char* s);
 %left 	'[' ']' '(' ')' '.' STRUCTOP
 
 /* Token and Types */
-%type<declptr>		unary
-%token<idptr> 		TYPE VOID STRUCT RETURN IF ELSE WHILE FOR BREAK CONTINUE
+%type<boolval>		pointers
+%type<declptr>		type_specifier struct_specifier expr or_expr or_list and_expr and_list binary unary
+%token<idptr> 		TYPE VOID STRUCT RETURN IF ELSE WHILE FOR BREAK CONTINUE ID
 %token				PRINT
-%token<stringval>	ID CHAR_CONST STRING STRUCTOP LOGICAL_OR LOGICAL_AND RELOP EQUOP INCOP DECOP
+%token<stringval>	CHAR_CONST STRING STRUCTOP LOGICAL_OR LOGICAL_AND RELOP EQUOP INCOP DECOP
 %token<intval>		INTEGER_CONST
 
 %%
@@ -84,11 +89,13 @@ ext_def
 type_specifier
 		: TYPE{
 			REDUCE("type_specifier -> TYPE");
-			printf("TYPE: %p\n",$1);
-			yyerror("!!!! practice !!!!");
+			if(!strcmp($1->name,"int")) $$ = inttype;
+			else if(!strcmp($1->name,"char")) $$ = chartype;
+			else $$ = NULL;
 		}
 		| VOID{
 			REDUCE("type_specifier -> VOID");
+			$$ = voidtype;
 		}
 		| struct_specifier{
 			REDUCE("type_specifier -> struct_specifier");
@@ -98,9 +105,16 @@ type_specifier
 struct_specifier
 		: STRUCT ID '{' def_list '}'{
 			REDUCE("struct_specifier -> STRUCT ID '{' def_list '}'");
+			// 새로운 struct type을 생성함
 		}
 		| STRUCT ID{
 			REDUCE("struct_specifier -> STRUCT ID");
+			// ID로 current decl 탐색
+			// struct 여부 확인
+			// 맞다면 올려줌
+			struct decl* declptr = findcurrentdecl($2);
+			if(check_is_struct_type(declptr)) $$ = declptr;
+			else $$ = NULL;
 		}
 		;
 
@@ -119,9 +133,11 @@ func_decl
 pointers
 		: '*'{
 			REDUCE("pointers -> '*'");
+			$$ = true;
 		}
 		| /* empty */{
 			REDUCE("pointers -> epsilon");
+			$$ = false;
 		}
 		;
 
@@ -154,6 +170,26 @@ def_list    /* list of definitions, definition can be type(struct), variable, fu
 
 def
 		: type_specifier pointers ID ';'{
+			// ID 값으로 동일 scope에 존재하는 값인지 여부 체크
+			// 재정의하면 error
+			if(findcurrentdecl($3))
+			{
+				yyerror("\nerror:redeclaration\n");
+			}
+			else
+			{
+				printf("check 1\n");
+				if($2)
+				{
+					// VAR PTR
+				}
+				else
+				{
+					// VAR
+					printf("not pointer\n");
+					declare($3, makevardecl($1));
+				}
+			}
 			REDUCE("def -> type_specifier pointers ID");
 		}
 		| type_specifier pointers ID '[' const_expr ']' ';'{
@@ -164,6 +200,9 @@ def
 		}
 		| func_decl ';'{
 			REDUCE("def -> func_decl ';'");
+		}
+		| PRINT{
+			printste();
 		}
 		;
 
@@ -222,6 +261,9 @@ stmt
 		| CONTINUE ';'{
 			REDUCE("stmt -> CONTINUE ';'");
 		}
+		| PRINT{
+			printste();
+		}
 		;
 
 expr_e
@@ -241,6 +283,21 @@ const_expr
 
 expr
 		: unary '=' expr{
+			bool result = false;
+			if(check_is_var($1))
+			{
+				if(check_compatible($1, $3)) $$ = $1;
+				else
+				{
+					yyerror("\nerror: LHS and RHS are not same type\n");
+					$$ = NULL;
+				}
+			}
+			else
+			{
+				yyerror("\nerror: LHS is not a varaible\n");
+				$$ = NULL;
+			}
 			REDUCE("expr -> unary '=' expr");
 		}
 		| or_expr{
@@ -299,9 +356,11 @@ binary
 unary
 		: '(' expr ')'{
 			REDUCE("unary -> '(' expr ')'");
+			$$ = $2;
 		}
 		| '(' unary ')'{
 			REDUCE("unary -> '(' unary ')'");
+			$$ = $2;
 		} 
 		| INTEGER_CONST{
 			REDUCE("unary -> INTEGER_CONST");
@@ -309,36 +368,77 @@ unary
 		}
 		| CHAR_CONST{
 			REDUCE("unary -> CHAR_CONST");
+			$$ = makecharconstdecl(chartype, $1);
 		}
 		| STRING{
 			REDUCE("unary -> STRING");
+			$$ = makestringconstdecl(stringtype, $1);
 		}
 		| ID{
 			REDUCE("unary -> ID");
+			// ID에 대응되는 decl이 없다면, findcurrentdecl은 NULL을 리턴
+			struct decl* declptr = findcurrentdecl($1);
+			declptr? : yyerror("\nerror: not declared\n");
+			$$ = declptr;
 		}
 		| '-' unary	%prec '!'{
 			REDUCE("unary -> '-' unary");
+			// $2 는 integer여야 한다
+			if($2->type==inttype) $$ = $2;
+			else
+			{
+				yyerror("\nerror: not int type\n");
+				$$ = NULL;
+			}
 		}
 		| '!' unary{
 			REDUCE("unary -> '!' unary");
+			if($2->type==inttype) $$ = $2;
+			else
+			{
+				yyerror("\nerror: not int type\n");
+				$$ = NULL;
+			}
 		}
 		| unary INCOP{
 			REDUCE("unary -> unary INCOP");
+			$$ = checkINCOPDECOP($1);
 		}
 		| unary DECOP{
 			REDUCE("unary -> unary DECOP");
+			$$ = checkINCOPDECOP($1);
 		}
 		| INCOP unary{
 			REDUCE("unary -> INCOP unary");
+			$$ = checkINCOPDECOP($2);
 		}
 		| DECOP unary{
 			REDUCE("unary -> DECCOP unary");
+			$$ = checkINCOPDECOP($2);
 		}
 		| '&' unary	%prec '!'{
 			REDUCE("unary -> '&' unary");
+			if(check_is_var($2))
+			{
+				struct decl* type = maketypedecl(PTR);
+				type->ptrto = $2->type;
+				$$ = makeconstdecl(type);
+			}
+			else
+			{
+				$$ = NULL;
+			}
 		}
 		| '*' unary	%prec '!'{
 			REDUCE("unary -> '*' unary");
+			if(check_is_var($2) && ($2->typeclass==PTR))
+			{
+				$$ = $2->type->ptrto;
+			}
+			else
+			{
+				$$ = NULL;
+			}
 		}
 		| unary '[' expr ']'{
 			REDUCE("unary -> unary '[' expr ']'");
@@ -381,7 +481,56 @@ void REDUCE(char* s)
 	printf("%s\n",s);
 }
 
-struct decl	*maketypedecl(int type)
+void push_scope()
+{
+	struct sse* sseptr = (struct sse*)malloc(sizeof(struct sse));
+	sseptr->top = cscope->top;
+	sseptr->prev = cscope;
+	cscope = sseptr;
+}
+
+struct ste* pop_scope()
+{
+	struct ste* result = NULL;
+	struct ste* currtop = cscope->top;
+
+	while(cscope->top!=cscope->prev->top)
+	{
+		cscope->top = currtop->prev;
+		currtop->prev = result;
+		result = currtop;
+		currtop = cscope->top;
+	}
+	
+	struct sse* temp = cscope;
+	cscope = cscope->prev;
+	free(temp);
+
+	return result;
+}
+
+struct decl* makevardecl(struct decl* type)
+{
+	struct decl* result = (struct decl*)malloc(sizeof(struct decl));
+	result->declclass = VAR;
+	result->type = type;
+	result->value = 0;
+	result->charconst = '\0';
+	result->string = NULL;
+	result->formals = NULL;
+	result->returntype = NULL;
+	result->typeclass = 0;
+	result->elementvar = NULL;
+	result->num_index = 0;
+	result->fieldlist = NULL;
+	result->ptrto = NULL;
+	result->scope = NULL;
+	result->next = NULL;
+
+	return result;
+}
+
+struct decl	*maketypedecl(int typeclass)
 {
 	struct decl* result = (struct decl*)malloc(sizeof(struct decl));
 	result->declclass = TYPE;
@@ -391,7 +540,7 @@ struct decl	*maketypedecl(int type)
 	result->string = NULL;
 	result->formals = NULL;
 	result->returntype = NULL;
-	result->typeclass = type;
+	result->typeclass = typeclass;
 	result->elementvar = NULL;
 	result->num_index = 0;
 	result->fieldlist = NULL;
@@ -399,14 +548,34 @@ struct decl	*maketypedecl(int type)
 	result->scope = NULL;
 	result->next = NULL;
 
-//	printf("result: %p\n", result)
+	return result;
+}
+
+struct decl	*makeconstdecl(struct decl* type)
+{
+	struct decl* result = (struct decl*)malloc(sizeof(struct decl));
+	result->declclass = CONST;
+	result->type = type;
+	result->value = 0;
+	result->charconst = '\0';
+	result->string = NULL;
+	result->formals = NULL;
+	result->returntype = NULL;
+	result->typeclass = 0;
+	result->elementvar = NULL;
+	result->num_index = 0;
+	result->fieldlist = NULL;
+	result->ptrto = NULL;
+	result->scope = NULL;
+	result->next = NULL;
+
 	return result;
 }
 
 struct decl	*makenumconstdecl(struct decl* type, int value)
 {
 	struct decl* result = (struct decl*)malloc(sizeof(struct decl));
-	result->declclass = INTEGER_CONST;
+	result->declclass = CONST;
 	result->type = type;
 	result->value = value;
 	result->charconst = '\0';
@@ -428,11 +597,36 @@ struct decl	*makecharconstdecl(struct decl* type, char* value)
 {
 	struct decl* result = (struct decl*)malloc(sizeof(struct decl));
 
-	result->declclass = CHAR_CONST;
+	result->declclass = CONST;
 	result->type = type;
 	result->value = 0;
 	result->charconst = *value;
 	result->string = NULL;
+	result->formals = NULL;
+	result->returntype = NULL;
+	result->typeclass = 0;
+	result->elementvar = NULL;
+	result->num_index = 0;
+	result->fieldlist = NULL;
+	result->ptrto = NULL;
+	result->scope = NULL;
+	result->next = NULL;
+
+	return result;
+}
+
+struct decl	*makestringconstdecl(struct decl* type, char* value)
+{
+	struct decl* result = (struct decl*)malloc(sizeof(struct decl));
+	int length = strlen(value);
+	char* string = (char*)malloc(sizeof(char)*(length+1));
+	strncpy(string, value, length);
+
+	result->declclass = CONST;
+	result->type = type;
+	result->value = 0;
+	result->charconst = '\0';
+	result->string = string;
 	result->formals = NULL;
 	result->returntype = NULL;
 	result->typeclass = 0;
@@ -468,24 +662,70 @@ void init_type()
 	chartype = maketypedecl(CHAR);
 	voidtype = maketypedecl(VOID);
 
-	declare(enter(ID, "int", 3), inttype);
-	declare(enter(ID, "char", 4), chartype);
-	declare(enter(ID, "void", 4), voidtype);
+	declare(enter(TYPE, "int", 3), inttype);
+	declare(enter(TYPE, "char", 4), chartype);
+	declare(enter(VOID, "void", 4), voidtype);
 	
 	returnid = enter(ID, "*return", 7);
+
+	// TEST
+//	char* s = ("abcedfg%s","xyz");
+//	printf("%s",s);
+//	struct ste* temp1 = NULL;
+//	struct ste* temp2 = NULL;
+//	printf("NULL test\n");
+//	printf(temp1==temp2? "true\n" : "false\n");
+//	struct ste* temp1 = cscope->top;
+//	struct ste* temp2 = temp1->prev;
+//	printf("temp1: %p\n", temp1);
+//	printf("temp2: %p\n", temp2);
+//	struct ste* temp3 = cscope->top;
+//	printf(temp1==temp3? "true\n" : "false\n");
 }
 
-struct decl *findcurrentdecl(struct id* name)
+struct decl* findcurrentdecl(struct id* name)
 {
 	struct ste* entry = cscope->top;
+	struct ste* last = cscope->prev? cscope->prev->top : NULL;
 
-	while(entry)
+	while(entry!=last)
 	{
 		if(entry->name==name) break;
 		else entry = entry->prev;
 	}
 
-	return entry->decl;
+	return entry? entry->decl : NULL;
+}
+
+struct decl* checkINCOPDECOP(struct decl* target)
+{
+	bool isInt = (target->type==inttype);
+	bool isChar = (target->type==chartype);
+	bool isPtr = (target->type->typeclass==PTR);
+	if(isInt || isChar || isPtr) return target;
+	else return NULL;
+}
+
+bool check_is_var(struct decl* target)
+{
+	if(target->declclass==VAR) return true;
+	else return false;
+}
+
+bool check_is_struct_type(struct decl* target)
+{
+	bool result = false;
+	if(check_is_var(target))
+	{
+		if(target->type->typeclass==STRUCT) result = true;
+	}
+	return result;
+}
+
+bool check_compatible(struct decl* declptr1, struct decl* declptr2)
+{
+	if(declptr1 && declptr2) return (declptr1->type==declptr2->type);
+	else return false;
 }
 
 void printste()

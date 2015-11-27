@@ -9,6 +9,7 @@
 
 #include <stdio.h>
 #include <strings.h>
+#include <stdbool.h>
 
 /* 
 	structure for ID 
@@ -52,6 +53,7 @@ struct sse* cscope;
 struct id*	returnid;
 struct decl* inttype;
 struct decl* chartype;
+struct decl* stringtype;
 struct decl* voidtype;
 
 /* 
@@ -67,12 +69,24 @@ int read_line();
 /*
 	Functions used in Project3 
 */
-struct decl *maketypedecl(int type);
-struct decl *makenumconstdecl(struct decl* type, int value);
-struct decl *makecharconstdecl(struct decl* type, char* value);
+void push_scope();
+struct ste* pop_scope();
+
+struct decl* makevardecl(struct decl* type);
+struct decl* maketypedecl(int typeclass);
+struct decl* makeconstdecl(struct decl* type);
+struct decl* makenumconstdecl(struct decl* type, int value);
+struct decl* makecharconstdecl(struct decl* type, char* value);
+struct decl* makestringconstdecl(struct decl* type, char* value);
+
+struct decl* checkINCOPDECOP(struct decl* target);
+bool check_is_var(struct decl* target);
+bool check_is_struct_type(struct decl* target);
+bool check_compatible(struct decl* declptr1, struct decl* declptr2);
+
 void declare(struct id* idptr, struct decl* declptr);
 void init_type();
-struct decl *findcurrentdecl(struct id* name);
+struct decl* findcurrentdecl(struct id* name);
 
 // special function for debugging
 void printste();
