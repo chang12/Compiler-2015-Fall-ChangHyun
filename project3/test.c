@@ -13,9 +13,19 @@
 	}
 }*/
 
+struct a{
+	int e;
+	char f;
+};
+
 int main(){
-	int a;
-	char b;
-	a = -a;
-	b = -b;
+
+	int i;
+	int j;
+
+	struct b{
+		int c;
+		char d;
+	};
+	
 }

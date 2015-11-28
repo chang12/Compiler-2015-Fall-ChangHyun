@@ -74,6 +74,7 @@ struct ste* pop_scope();
 
 struct decl* makevardecl(struct decl* type);
 struct decl* maketypedecl(int typeclass);
+struct decl* makestructdecl(struct decl* fields);
 struct decl* makeconstdecl(struct decl* type);
 struct decl* makenumconstdecl(struct decl* type, int value);
 struct decl* makecharconstdecl(struct decl* type, char* value);
@@ -87,6 +88,7 @@ bool check_compatible(struct decl* declptr1, struct decl* declptr2);
 void declare(struct id* idptr, struct decl* declptr);
 void init_type();
 struct decl* findcurrentdecl(struct id* name);
+struct decl* findstructdecl(struct id* name);
 
 // special function for debugging
 void printste();

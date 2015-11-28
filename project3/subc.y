@@ -103,10 +103,24 @@ type_specifier
 		;
 
 struct_specifier
-		: STRUCT ID '{' def_list '}'{
-			REDUCE("struct_specifier -> STRUCT ID '{' def_list '}'");
-			// 새로운 struct type을 생성함
-		}
+		: STRUCT ID '{' 
+			{
+				push_scope();	
+			}
+		  	def_list
+			{
+				struct ste* fields = pop_scope();
+				$<declptr>$ = NULL;
+				if(findcurrentdecl($2)) yyerror("\n1 error: redeclaration\n");
+				else if(findstructdecl($2)) yyerror("\n2 error: redeclaration(struct)\n");
+				else declare($2, ($<declptr>$=makestructdecl(fields)));
+			}
+			'}'
+			{
+				$$ = $<declptr>6;
+				REDUCE("struct_specifier -> STRUCT ID '{' def_list '}'");
+				// 새로운 struct type을 생성함
+			}
 		| STRUCT ID{
 			REDUCE("struct_specifier -> STRUCT ID");
 			// ID로 current decl 탐색
@@ -174,11 +188,10 @@ def
 			// 재정의하면 error
 			if(findcurrentdecl($3))
 			{
-				yyerror("\nerror:redeclaration\n");
+				yyerror("\n3 error:redeclaration\n");
 			}
 			else
 			{
-				printf("check 1\n");
 				if($2)
 				{
 					// VAR PTR
@@ -551,6 +564,27 @@ struct decl	*maketypedecl(int typeclass)
 	return result;
 }
 
+struct decl	*makestructdecl(struct decl* fields)
+{
+	struct decl* result = (struct decl*)malloc(sizeof(struct decl));
+	result->declclass = TYPE;
+	result->type = NULL;
+	result->value = 0;
+	result->charconst = '\0';
+	result->string = NULL;
+	result->formals = NULL;
+	result->returntype = NULL;
+	result->typeclass = STRUCT;
+	result->elementvar = NULL;
+	result->num_index = 0;
+	result->fieldlist = fields;
+	result->ptrto = NULL;
+	result->scope = NULL;
+	result->next = NULL;
+
+	return result;
+}
+
 struct decl	*makeconstdecl(struct decl* type)
 {
 	struct decl* result = (struct decl*)malloc(sizeof(struct decl));
@@ -691,6 +725,19 @@ struct decl* findcurrentdecl(struct id* name)
 	while(entry!=last)
 	{
 		if(entry->name==name) break;
+		else entry = entry->prev;
+	}
+
+	return (entry!=last? entry->decl : NULL);
+}
+
+struct decl* findstructdecl(struct id* name)
+{
+	struct ste* entry = cscope->top;
+	while(entry)
+	{
+		fprintf(stderr,"\n%s\n",entry->name->name);
+		if((entry->name==name)&&(entry->decl->typeclass==STRUCT)) break;
 		else entry = entry->prev;
 	}
 
