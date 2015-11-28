@@ -110,16 +110,27 @@ struct_specifier
 			}
 		  	def_list
 			{
+				printste();
 				// 여기서 ID는 VAR의 ID가 아니라, struct type을 나타내는 ID
 				struct ste* fields = pop_scope();
+				// debug
+				printf("\n\nfieldscheck\n\n");
+				printf("\nfieldptr: %p\n",fields);
+				printf("\nfieldname: %s\n",fields->name->name);
+				printf("\nfieldname: %s\n",fields->prev->name->name);
+				printste();
 				$<declptr>$ = NULL;
 				if(findstructdecl($2)) yyerror("\n2 error: redeclaration(struct)\n");
 				else declare($2, ($<declptr>$=makestructdecl(fields)));
+				printste();
+				printf("\n$<declptr>$: %d\n", $<declptr>$->declclass);
 			}
 			'}'
 			
 			{
 				$$ = $<declptr>6;
+				printf("\nname1: %s\n",$$->fieldlist->name->name);
+				printf("\nname2: %s\n",$$->fieldlist->prev->name->name);
 				REDUCE("struct_specifier -> STRUCT ID '{' def_list '}'");
 				// 새로운 struct type을 생성함
 			}
@@ -445,8 +456,7 @@ unary
 			// ID에 대응되는 decl이 없다면, findcurrentdecl은 NULL을 리턴
 			
 			// debug
-	
-
+			printf("\n%s\n",$1->name);
 
 			struct decl* declptr = findcurrentdecl($1);
 
@@ -520,6 +530,9 @@ unary
 		}
 		| unary '.' ID{
 			REDUCE("unary -> unary '.' ID");
+			// debug
+			fprintf(stderr,"\n%s\n","debug");
+			$$ = structaccess($1, $3);
 		}
 		| unary STRUCTOP ID{
 			REDUCE("unary -> unary STRUCTOP ID");
@@ -911,6 +924,10 @@ bool check_compatible(struct decl* declptr1, struct decl* declptr2)
 struct decl* arrayaccess(struct decl* arrayptr, struct decl* indexptr)
 {
 
+	// RHS의 unary는 const 이고, type의 typeclass는 array 인가?
+	// expr는 int type VAR 이거나, INT_CONST 인가?
+	// 조건을 충족한다면, elementvar로 VAR을 넘겨준다.
+
 	struct decl* result = NULL;
 
 	if(check_is_array(arrayptr))
@@ -918,6 +935,30 @@ struct decl* arrayaccess(struct decl* arrayptr, struct decl* indexptr)
 		if(indexptr->type == inttype) result = arrayptr->type->elementvar;
 		else yyerror("\nerror: not a int type index\n");
 	}
+}
+
+struct decl* structaccess(struct decl* structptr, struct id* fieldid)
+{
+	printf("\nfieldid: %s\n",fieldid->name);
+	struct decl* result = NULL;
+	if(check_is_struct_type(structptr))
+	{
+		printf("\ncheck1\n");
+		struct ste* entry = structptr->type->fieldlist;
+		while(entry)
+		{
+			printf("\ncheck2\n");
+			// debug
+			printf("\nfiledname: %s\n",entry->name->name);
+			if(entry->name==fieldid) break;
+			else entry = entry->prev;
+		}
+		if(entry) result = entry->decl;
+		else yyerror("\nstruct do not have same field\n");
+	}
+	else yyerror("\nerror: variable is not struct\n");
+
+	return result;
 }
 
 void printste()

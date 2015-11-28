@@ -94,6 +94,7 @@ struct decl* findcurrentdecl(struct id* name);
 struct decl* findstructdecl(struct id* name);
 
 struct decl* arrayaccess(struct decl* arrayptr, struct decl* indexptr);
+struct decl* structaccess(struct decl* structptr, struct id* fieldid);
 
 // special function for debugging
 void printste();
