@@ -109,13 +109,14 @@ struct_specifier
 			}
 		  	def_list
 			{
+				// 여기서 ID는 VAR의 ID가 아니라, struct type을 나타내는 ID
 				struct ste* fields = pop_scope();
 				$<declptr>$ = NULL;
-				if(findcurrentdecl($2)) yyerror("\n1 error: redeclaration\n");
-				else if(findstructdecl($2)) yyerror("\n2 error: redeclaration(struct)\n");
+				if(findstructdecl($2)) yyerror("\n2 error: redeclaration(struct)\n");
 				else declare($2, ($<declptr>$=makestructdecl(fields)));
 			}
 			'}'
+			
 			{
 				$$ = $<declptr>6;
 				REDUCE("struct_specifier -> STRUCT ID '{' def_list '}'");
@@ -123,12 +124,16 @@ struct_specifier
 			}
 		| STRUCT ID{
 			REDUCE("struct_specifier -> STRUCT ID");
-			// ID로 current decl 탐색
-			// struct 여부 확인
-			// 맞다면 올려줌
-			struct decl* declptr = findcurrentdecl($2);
-			if(check_is_struct_type(declptr)) $$ = declptr;
-			else $$ = NULL;
+			// ID로 미리 정의되어있는 struct type 인지 확인한다.
+			struct decl* structdecl = findstructdecl($2);
+			$$ = NULL;
+			if(structdecl) $$ = structdecl;
+			else
+			{
+				char errorMsg[50] = "error: struct ";
+				yyerror(strcat(errorMsg, strcat($2->name, " is not defined")));
+			}
+
 		}
 		;
 
@@ -186,20 +191,30 @@ def
 		: type_specifier pointers ID ';'{
 			// ID 값으로 동일 scope에 존재하는 값인지 여부 체크
 			// 재정의하면 error
-			if(findcurrentdecl($3))
+			struct decl* declptr = findcurrentdecl($3);
+			if(declptr)
 			{
-				yyerror("\n3 error:redeclaration\n");
+				// 동일 name으로 존재하더라도, struct 정의라면 허용한다.
+				// ex) struct a{}; 하고 int a; 해도 문제 X
+				// 그러므로 findcurrentdecl로 반환된 declclass 까지 반환한다.
+				if(declptr->declclass!=TYPE)
+				{
+					yyerror("\n3 error:redeclaration\n");
+				}
 			}
 			else
 			{
 				if($2)
 				{
 					// VAR PTR
+					printf("\npointer\n");
+					// comeback
+					declare($3,makevardecl(makeptrdecl(makevardecl($1))));
 				}
 				else
 				{
 					// VAR
-					printf("not pointer\n");
+					printf("\nnot pointer\n");
 					declare($3, makevardecl($1));
 				}
 			}
@@ -302,6 +317,7 @@ expr
 				if(check_compatible($1, $3)) $$ = $1;
 				else
 				{
+					// comeback
 					yyerror("\nerror: LHS and RHS are not same type\n");
 					$$ = NULL;
 				}
@@ -433,9 +449,8 @@ unary
 			REDUCE("unary -> '&' unary");
 			if(check_is_var($2))
 			{
-				struct decl* type = maketypedecl(PTR);
-				type->ptrto = $2->type;
-				$$ = makeconstdecl(type);
+				// comeback
+				$$ = makeconstdecl(makeptrdecl($2));
 			}
 			else
 			{
@@ -537,6 +552,27 @@ struct decl* makevardecl(struct decl* type)
 	result->num_index = 0;
 	result->fieldlist = NULL;
 	result->ptrto = NULL;
+	result->scope = NULL;
+	result->next = NULL;
+
+	return result;
+}
+
+struct decl* makeptrdecl(struct decl* vardecl)
+{
+	struct decl* result = (struct decl*)malloc(sizeof(struct decl));
+	result->declclass = TYPE;
+	result->type = NULL;
+	result->value = 0;
+	result->charconst = '\0';
+	result->string = NULL;
+	result->formals = NULL;
+	result->returntype = NULL;
+	result->typeclass = PTR;
+	result->elementvar = NULL;
+	result->num_index = 0;
+	result->fieldlist = NULL;
+	result->ptrto = vardecl;
 	result->scope = NULL;
 	result->next = NULL;
 
@@ -736,11 +772,17 @@ struct decl* findstructdecl(struct id* name)
 	struct ste* entry = cscope->top;
 	while(entry)
 	{
-		fprintf(stderr,"\n%s\n",entry->name->name);
-		if((entry->name==name)&&(entry->decl->typeclass==STRUCT)) break;
+		if(entry->name==name)
+		{
+			if(entry->decl->declclass==TYPE)
+			{
+				if(entry->decl->typeclass==STRUCT) break;
+			}
+
+		}
+//		if((entry->name==name)&&(entry->decl->typeclass==STRUCT)) break;
 		else entry = entry->prev;
 	}
-
 	return entry? entry->decl : NULL;
 }
 
@@ -771,8 +813,20 @@ bool check_is_struct_type(struct decl* target)
 
 bool check_compatible(struct decl* declptr1, struct decl* declptr2)
 {
-	if(declptr1 && declptr2) return (declptr1->type==declptr2->type);
-	else return false;
+	bool result = false;
+
+	if(declptr1 && declptr2) 
+	{
+		if(declptr1->type==declptr2->type) result = true;
+		else if((declptr1->type->typeclass==PTR)&&(declptr2->type->typeclass==PTR))
+		{
+			
+			if(declptr1->type->ptrto->type==declptr2->type->ptrto->type) result = true;	
+		}
+
+	}
+		
+	return result;
 }
 
 void printste()

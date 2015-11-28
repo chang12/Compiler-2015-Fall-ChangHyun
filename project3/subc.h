@@ -73,6 +73,7 @@ void push_scope();
 struct ste* pop_scope();
 
 struct decl* makevardecl(struct decl* type);
+struct decl* makeptrdecl(struct decl* vardecl);
 struct decl* maketypedecl(int typeclass);
 struct decl* makestructdecl(struct decl* fields);
 struct decl* makeconstdecl(struct decl* type);

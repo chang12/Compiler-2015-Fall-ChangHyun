@@ -13,19 +13,37 @@
 	}
 }*/
 
+/*
 struct a{
 	int e;
 	char f;
 };
-
+*/
 int main(){
 
-	int i;
-	int j;
+	struct a{
+		int i;
+		int j;
+	};
+
+	struct a i;
+	struct a *j;
+
+	j = &i;
+
+	
+
+/*
+	struct k{
+		int d;
+	};
 
 	struct b{
 		int c;
 		char d;
-	};
-	
+		struct c{
+			int a;
+		} e;
+	} b;
+*/
 }
