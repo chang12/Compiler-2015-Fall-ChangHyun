@@ -25,11 +25,12 @@ int main(){
 		int e;
 		char f;
 	};
-	struct a b;
-	int c;
+	struct a* b;
+	char c;
+	
 	int i;
 
-	i = b.f;
+	i = c->e;
 
 /*	i = b.e;*/
 	

@@ -110,27 +110,16 @@ struct_specifier
 			}
 		  	def_list
 			{
-				printste();
 				// 여기서 ID는 VAR의 ID가 아니라, struct type을 나타내는 ID
 				struct ste* fields = pop_scope();
-				// debug
-				printf("\n\nfieldscheck\n\n");
-				printf("\nfieldptr: %p\n",fields);
-				printf("\nfieldname: %s\n",fields->name->name);
-				printf("\nfieldname: %s\n",fields->prev->name->name);
-				printste();
 				$<declptr>$ = NULL;
 				if(findstructdecl($2)) yyerror("\n2 error: redeclaration(struct)\n");
 				else declare($2, ($<declptr>$=makestructdecl(fields)));
-				printste();
-				printf("\n$<declptr>$: %d\n", $<declptr>$->declclass);
 			}
 			'}'
 			
 			{
 				$$ = $<declptr>6;
-				printf("\nname1: %s\n",$$->fieldlist->name->name);
-				printf("\nname2: %s\n",$$->fieldlist->prev->name->name);
 				REDUCE("struct_specifier -> STRUCT ID '{' def_list '}'");
 				// 새로운 struct type을 생성함
 			}
@@ -455,9 +444,6 @@ unary
 
 			// ID에 대응되는 decl이 없다면, findcurrentdecl은 NULL을 리턴
 			
-			// debug
-			printf("\n%s\n",$1->name);
-
 			struct decl* declptr = findcurrentdecl($1);
 
 			char errorMsg[100] = "\nerror: undefined variable ";
@@ -530,12 +516,11 @@ unary
 		}
 		| unary '.' ID{
 			REDUCE("unary -> unary '.' ID");
-			// debug
-			fprintf(stderr,"\n%s\n","debug");
 			$$ = structaccess($1, $3);
 		}
 		| unary STRUCTOP ID{
 			REDUCE("unary -> unary STRUCTOP ID");
+			$$ = structptraccess($1, $3);
 		}
 		| unary '(' args ')'{
 			REDUCE("unary -> unary '(' args ')'");
@@ -939,17 +924,12 @@ struct decl* arrayaccess(struct decl* arrayptr, struct decl* indexptr)
 
 struct decl* structaccess(struct decl* structptr, struct id* fieldid)
 {
-	printf("\nfieldid: %s\n",fieldid->name);
 	struct decl* result = NULL;
 	if(check_is_struct_type(structptr))
 	{
-		printf("\ncheck1\n");
 		struct ste* entry = structptr->type->fieldlist;
 		while(entry)
 		{
-			printf("\ncheck2\n");
-			// debug
-			printf("\nfiledname: %s\n",entry->name->name);
 			if(entry->name==fieldid) break;
 			else entry = entry->prev;
 		}
@@ -957,6 +937,21 @@ struct decl* structaccess(struct decl* structptr, struct id* fieldid)
 		else yyerror("\nstruct do not have same field\n");
 	}
 	else yyerror("\nerror: variable is not struct\n");
+
+	return result;
+}
+
+struct decl* structptraccess(struct decl* structptr, struct id* fieldid)
+{
+	struct decl* result = NULL;
+	if(check_is_var(structptr))
+	{
+		if(structptr->type->typeclass==PTR)
+		{
+			result = structaccess(structptr->type->ptrto, fieldid);
+		}
+		else yyerror("\nerror: variable is not struct pointer\n");
+	}
 
 	return result;
 }
