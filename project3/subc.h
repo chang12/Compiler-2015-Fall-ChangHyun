@@ -74,6 +74,7 @@ struct ste* pop_scope();
 
 struct decl* makevardecl(struct decl* type);
 struct decl* makeptrdecl(struct decl* vardecl);
+struct decl* makearraydecl(struct decl* elementvar);
 struct decl* maketypedecl(int typeclass);
 struct decl* makestructdecl(struct decl* fields);
 struct decl* makeconstdecl(struct decl* type);
@@ -83,6 +84,7 @@ struct decl* makestringconstdecl(struct decl* type, char* value);
 
 struct decl* checkINCOPDECOP(struct decl* target);
 bool check_is_var(struct decl* target);
+bool check_is_array(struct decl* declptr);
 bool check_is_struct_type(struct decl* target);
 bool check_compatible(struct decl* declptr1, struct decl* declptr2);
 
@@ -90,6 +92,8 @@ void declare(struct id* idptr, struct decl* declptr);
 void init_type();
 struct decl* findcurrentdecl(struct id* name);
 struct decl* findstructdecl(struct id* name);
+
+struct decl* arrayaccess(struct decl* arrayptr, struct decl* indexptr);
 
 // special function for debugging
 void printste();

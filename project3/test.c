@@ -21,16 +21,11 @@ struct a{
 */
 int main(){
 
-	struct a{
-		int i;
-		int j;
-	};
+	int i;
+	int* j[20];
+	int k;
 
-	struct a i;
-	struct a *j;
-
-	j = &i;
-
+	&k = j[3];
 	
 
 /*

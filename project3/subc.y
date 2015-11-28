@@ -10,6 +10,7 @@
 #define PTR		102
 #define VAR		103
 #define CONST	104
+#define ARRAY	105
 
 int    yylex ();
 int    yyerror (char* s);
@@ -43,7 +44,7 @@ void 	REDUCE(char* s);
 
 /* Token and Types */
 %type<boolval>		pointers
-%type<declptr>		type_specifier struct_specifier expr or_expr or_list and_expr and_list binary unary
+%type<declptr>		type_specifier struct_specifier expr or_expr or_list and_expr and_list binary unary const_expr
 %token<idptr> 		TYPE VOID STRUCT RETURN IF ELSE WHILE FOR BREAK CONTINUE ID
 %token				PRINT
 %token<stringval>	CHAR_CONST STRING STRUCTOP LOGICAL_OR LOGICAL_AND RELOP EQUOP INCOP DECOP
@@ -130,8 +131,8 @@ struct_specifier
 			if(structdecl) $$ = structdecl;
 			else
 			{
-				char errorMsg[50] = "error: struct ";
-				yyerror(strcat(errorMsg, strcat($2->name, " is not defined")));
+				char errorMsg[50] = "\nerror: struct ";
+				yyerror(strcat(errorMsg, strcat($2->name, " is not defined\n")));
 			}
 
 		}
@@ -197,31 +198,67 @@ def
 				// 동일 name으로 존재하더라도, struct 정의라면 허용한다.
 				// ex) struct a{}; 하고 int a; 해도 문제 X
 				// 그러므로 findcurrentdecl로 반환된 declclass 까지 반환한다.
-				if(declptr->declclass!=TYPE)
-				{
-					yyerror("\n3 error:redeclaration\n");
-				}
+				// 위의 내용을 findcurrentdecl 에서 수행하도록 옮겼다.
+				char errorMsg[100] = "\nerror: redeclaration of ";
+				yyerror(strcat(errorMsg, strcat($3->name,"\n")));
 			}
 			else
 			{
-				if($2)
+				if($1)
 				{
-					// VAR PTR
-					printf("\npointer\n");
-					// comeback
-					declare($3,makevardecl(makeptrdecl(makevardecl($1))));
-				}
-				else
-				{
-					// VAR
-					printf("\nnot pointer\n");
-					declare($3, makevardecl($1));
+					if($2)
+					{
+						// VAR PTR
+						declare($3, makevardecl(makeptrdecl(makevardecl($1))));
+					}
+					else
+					{
+						// VAR
+						declare($3, makevardecl($1));
+					}
 				}
 			}
 			REDUCE("def -> type_specifier pointers ID");
 		}
 		| type_specifier pointers ID '[' const_expr ']' ';'{
 			REDUCE("def -> type_specifier pointers ID '[' const_expr ']' ';'");
+			// ID integrity
+			struct decl* declptr = findcurrentdecl($3);
+			if(declptr)
+			{
+				char errorMsg[100] = "\nerror: redeclaration of ";
+				yyerror(strcat(errorMsg, strcat($3->name,"\n")));
+			}
+			else
+			{
+				// TYPE integrity
+				if($1)
+				{
+					// Array size integrity
+					if($5)
+					{
+						// CONST 이고, type이 inttype
+						if($5->declclass==CONST)
+						{
+							if($5->type==inttype)
+							{
+								struct decl* elementvar;
+								if($2)
+								{
+									elementvar = makevardecl(makeptrdecl(makevardecl($1)));
+								}
+								else
+								{
+									elementvar = makevardecl($1);
+								}	
+							
+								declare($3, makeconstdecl(makearraydecl(elementvar)));
+							}
+						}
+					}
+					
+				}
+			}
 		}
 		| type_specifier ';'{
 			REDUCE("def -> type_specifier ';'");
@@ -317,7 +354,6 @@ expr
 				if(check_compatible($1, $3)) $$ = $1;
 				else
 				{
-					// comeback
 					yyerror("\nerror: LHS and RHS are not same type\n");
 					$$ = NULL;
 				}
@@ -405,9 +441,18 @@ unary
 		}
 		| ID{
 			REDUCE("unary -> ID");
+
 			// ID에 대응되는 decl이 없다면, findcurrentdecl은 NULL을 리턴
+			
+			// debug
+	
+
+
 			struct decl* declptr = findcurrentdecl($1);
-			declptr? : yyerror("\nerror: not declared\n");
+
+			char errorMsg[100] = "\nerror: undefined variable ";
+
+			declptr? : yyerror(strcat(errorMsg, strcat($1->name, "\n")));
 			$$ = declptr;
 		}
 		| '-' unary	%prec '!'{
@@ -449,7 +494,6 @@ unary
 			REDUCE("unary -> '&' unary");
 			if(check_is_var($2))
 			{
-				// comeback
 				$$ = makeconstdecl(makeptrdecl($2));
 			}
 			else
@@ -459,17 +503,20 @@ unary
 		}
 		| '*' unary	%prec '!'{
 			REDUCE("unary -> '*' unary");
-			if(check_is_var($2) && ($2->typeclass==PTR))
+			if(check_is_var($2))
 			{
-				$$ = $2->type->ptrto;
+				if($2->type->typeclass==PTR) $$ = $2->type->ptrto;
 			}
-			else
-			{
-				$$ = NULL;
-			}
+			else $$ = NULL;
+
 		}
 		| unary '[' expr ']'{
 			REDUCE("unary -> unary '[' expr ']'");
+			// RHS의 unary는 const 이고, type의 typeclass는 array 인가?
+			// expr는 int type VAR 이거나, INT_CONST 인가?
+			// 조건을 충족한다면, elementvar로 VAR을 넘겨준다.
+			
+			$$ = arrayaccess($1, $3);
 		}
 		| unary '.' ID{
 			REDUCE("unary -> unary '.' ID");
@@ -573,6 +620,27 @@ struct decl* makeptrdecl(struct decl* vardecl)
 	result->num_index = 0;
 	result->fieldlist = NULL;
 	result->ptrto = vardecl;
+	result->scope = NULL;
+	result->next = NULL;
+
+	return result;
+}
+
+struct decl* makearraydecl(struct decl* elementvar)
+{
+	struct decl* result = (struct decl*)malloc(sizeof(struct decl));
+	result->declclass = TYPE;
+	result->type = NULL;
+	result->value = 0;
+	result->charconst = '\0';
+	result->string = NULL;
+	result->formals = NULL;
+	result->returntype = NULL;
+	result->typeclass = ARRAY;
+	result->elementvar = elementvar;
+	result->num_index = 0;
+	result->fieldlist = NULL;
+	result->ptrto = NULL;
 	result->scope = NULL;
 	result->next = NULL;
 
@@ -764,7 +832,7 @@ struct decl* findcurrentdecl(struct id* name)
 		else entry = entry->prev;
 	}
 
-	return (entry!=last? entry->decl : NULL);
+	return (entry!=last? (entry->decl->declclass==TYPE? NULL : entry->decl) : NULL);
 }
 
 struct decl* findstructdecl(struct id* name)
@@ -801,6 +869,17 @@ bool check_is_var(struct decl* target)
 	else return false;
 }
 
+bool check_is_array(struct decl* declptr)
+{
+	bool result = false;
+	if(declptr->declclass==CONST)
+	{
+		if(declptr->type->typeclass==ARRAY) result = true;
+	}
+	if(!result) yyerror("\nerror: not array type \n");
+	return result;
+}
+
 bool check_is_struct_type(struct decl* target)
 {
 	bool result = false;
@@ -827,6 +906,18 @@ bool check_compatible(struct decl* declptr1, struct decl* declptr2)
 	}
 		
 	return result;
+}
+
+struct decl* arrayaccess(struct decl* arrayptr, struct decl* indexptr)
+{
+
+	struct decl* result = NULL;
+
+	if(check_is_array(arrayptr))
+	{
+		if(indexptr->type == inttype) result = arrayptr->type->elementvar;
+		else yyerror("\nerror: not a int type index\n");
+	}
 }
 
 void printste()

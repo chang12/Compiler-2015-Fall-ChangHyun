@@ -4,10 +4,13 @@
 
 int main()
 {
-	char a[100] = "test";
-	char *b = " my";
-	// yyerror(strcat(a, b));
-	printf("%s\n",strcat(a,b));
+	char errorMsg[50] = "error: ";
+	char* a = (char*)malloc(sizeof(char)*4);
+	a = "abc";
+
+	yyerror(strcat(errorMsg, strcat(a, " test")));
+//	fprintf(stderr,"%s",strcat(errorMsg,strcat(a," test")));
+//	printf("%s\n",strcat(error,strcat(a, " test")));
 }
 
 void yyerror(char *s)
