@@ -75,7 +75,7 @@ extern int yydebug;
 typedef union YYSTYPE YYSTYPE;
 union YYSTYPE
 {
-#line 22 "subc.y" /* yacc.c:1909  */
+#line 23 "subc.y" /* yacc.c:1909  */
 
 	int				intval;
 	char			*stringval;

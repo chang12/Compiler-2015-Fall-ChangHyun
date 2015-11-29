@@ -10,18 +10,13 @@ int main()
 
 //	yyerror(strcat(errorMsg, strcat(a, " test")));
 
-	struct a{
-		int b;
-		int c;
-	};
+	int* i;
+	*i = 3;
+	int* j = NULL;
+	bool k = true;
+	printf(i&&k? "NOT NULL\n":"NULL\n");
+	printf(j&&k? "NOT NULL\n":"NULL\n");
 
-	struct a b;
-	b.b = 3;
-	b.c = 5;
-
-	printf("%d\n",b.b);
-	b.b = 100;
-	printf("%d\n",(&b)->b);
 
 //	fprintf(stderr,"%s",strcat(errorMsg,strcat(a," test")));
 //	printf("%s\n",strcat(error,strcat(a, " test")));

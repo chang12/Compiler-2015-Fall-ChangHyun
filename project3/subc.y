@@ -11,6 +11,7 @@
 #define VAR		103
 #define CONST	104
 #define ARRAY	105
+#define FUNC	106
 
 int    yylex ();
 int    yyerror (char* s);
@@ -43,8 +44,8 @@ void 	REDUCE(char* s);
 %left 	'[' ']' '(' ')' '.' STRUCTOP
 
 /* Token and Types */
-%type<boolval>		pointers
-%type<declptr>		type_specifier struct_specifier expr or_expr or_list and_expr and_list binary unary const_expr
+%type<boolval>		pointers param_decl param_list
+%type<declptr>		type_specifier struct_specifier expr or_expr or_list and_expr and_list binary unary const_expr func_decl
 %token<idptr> 		TYPE VOID STRUCT RETURN IF ELSE WHILE FOR BREAK CONTINUE ID
 %token				PRINT
 %token<stringval>	CHAR_CONST STRING STRUCTOP LOGICAL_OR LOGICAL_AND RELOP EQUOP INCOP DECOP
@@ -141,12 +142,101 @@ struct_specifier
 func_decl
 		: type_specifier pointers ID '(' ')'{
 			REDUCE("func_decl -> type_specifier pointers ID '(' ')'");
+			
+			// 존재하는 func 이름인지 확인
+			struct decl* funcdecl = findfuncdecl($3);
+
+			if(funcdecl)
+			{
+				char errorMsg[100] = "\nerror: function name ";
+				yyerror(strcat(errorMsg, strcat($3->name," is redeclared\n")));
+				$$ = NULL;
+			}
+			else
+			{
+				if($2) 
+				{
+					funcdecl = makefuncdecl(makeptrdecl(makeconstdecl($1)));
+					declare($3, funcdecl);
+				}
+				else
+				{
+					funcdecl = makefuncdecl($1);
+					declare($3, funcdecl);
+				}
+			}			
 		}
 		| type_specifier pointers ID '(' VOID ')'{
 			REDUCE("func_decl -> type_specifier pointers ID '(' VOID ')'");
+
+			// 존재하는 func 이름인지 확인
+			struct decl* funcdecl = findfuncdecl($3);
+
+			if(funcdecl)
+			{
+				char errorMsg[100] = "\nerror: function name ";
+				yyerror(strcat(errorMsg, strcat($3->name," is redeclared\n")));
+				$$ = NULL;
+			}
+			else
+			{
+				if($2) 
+				{
+					funcdecl = makefuncdecl(makeptrdecl(makeconstdecl($1)));
+					declare($3, funcdecl);
+				}
+				else
+				{
+					funcdecl = makefuncdecl($1);
+					declare($3, funcdecl);
+				}
+			}
 		}
-		| type_specifier pointers ID '(' param_list ')'{
+		| type_specifier pointers ID '(' {
+			// FUNC declare 는 param_list 를 확인한 뒤로 미룬다
+			struct decl* funcdecl = findfuncdecl($3);
+
+			if(funcdecl)
+			{
+				char errorMsg[100] = "\nerror: function name ";
+				yyerror(strcat(errorMsg, strcat($3->name," is redeclared\n")));
+				$<declptr>$ = NULL;
+			}
+			else
+			{
+				struct decl* returntypedecl = NULL;
+				if($2) 
+				{
+					returntypedecl = makeptrdecl(makeconstdecl($1));
+					$<declptr>$ = makefuncdecl(returntypedecl);
+				}
+				else
+				{
+					returntypedecl = $1;
+					$<declptr>$ = makefuncdecl(returntypedecl);
+				}
+				push_scope();
+				declare(returnid,returntypedecl);
+			}
+		}
+		  param_list ')'{
 			REDUCE("func_decl -> type_specifier pointers ID '(' param_list ')'");
+			// param_list 받는 과정에서 error가 발생할 수 있다
+			// 그러므로 param_list 의 NULL 여부를 체크한다.
+			// 그리고 func_decl 에 declptr을 매기는 작업도, 여기서 해준다.
+
+			struct ste*	formals;
+			struct decl* funcdecl = $<declptr>5;
+
+			if(funcdecl&&$6)
+			{
+				//comeback
+				formals = pop_scope();
+				funcdecl->formals = formals->prev;
+				$$ = funcdecl;
+				declare($3, funcdecl);
+			}
+			else $$ = NULL;
 		}
 	;
 
@@ -164,9 +254,11 @@ pointers
 param_list  /* list of formal parameter declaration */
 		: param_decl{
 			REDUCE("param_list -> param_decl");
+			$$ = $1;
 		}
 		| param_list ',' param_decl{
 			REDUCE("param_list -> param_list ',' param_decl");
+			$$ = $1 && $3;
 		}
 		;
 
@@ -603,7 +695,7 @@ struct decl* makevardecl(struct decl* type)
 	return result;
 }
 
-struct decl* makeptrdecl(struct decl* vardecl)
+struct decl* makeptrdecl(struct decl* ptrtodecl)
 {
 	struct decl* result = (struct decl*)malloc(sizeof(struct decl));
 	result->declclass = TYPE;
@@ -617,7 +709,7 @@ struct decl* makeptrdecl(struct decl* vardecl)
 	result->elementvar = NULL;
 	result->num_index = 0;
 	result->fieldlist = NULL;
-	result->ptrto = vardecl;
+	result->ptrto = ptrtodecl;
 	result->scope = NULL;
 	result->next = NULL;
 
@@ -680,6 +772,27 @@ struct decl	*makestructdecl(struct decl* fields)
 	result->elementvar = NULL;
 	result->num_index = 0;
 	result->fieldlist = fields;
+	result->ptrto = NULL;
+	result->scope = NULL;
+	result->next = NULL;
+
+	return result;
+}
+
+struct decl	*makefuncdecl(struct decl* returntypedecl)
+{
+	struct decl* result = (struct decl*)malloc(sizeof(struct decl));
+	result->declclass = FUNC;
+	result->type = NULL;
+	result->value = 0;
+	result->charconst = '\0';
+	result->string = NULL;
+	result->formals = NULL;
+	result->returntype = returntypedecl;
+	result->typeclass = 0;
+	result->elementvar = NULL;
+	result->num_index = 0;
+	result->fieldlist = NULL;
 	result->ptrto = NULL;
 	result->scope = NULL;
 	result->next = NULL;
@@ -851,6 +964,21 @@ struct decl* findstructdecl(struct id* name)
 	}
 	return entry? entry->decl : NULL;
 }
+
+struct decl* findfuncdecl(struct id* name)
+{
+	struct ste* entry = cscope->top;
+	while(entry)
+	{
+		if(entry->name==name)
+		{
+			if(entry->decl->declclass==FUNC) break;
+		}
+		else entry = entry->prev;
+	}
+	return entry? entry->decl : NULL;
+}
+
 
 struct decl* checkINCOPDECOP(struct decl* target)
 {

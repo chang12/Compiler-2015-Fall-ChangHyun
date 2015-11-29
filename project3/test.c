@@ -19,33 +19,5 @@
 	char f;
 };*/
 
-int main(){
+int func1(int x, int y);
 
-	struct a{
-		int e;
-		char f;
-	};
-	struct a* b;
-	char c;
-	
-	int i;
-
-	i = c->e;
-
-/*	i = b.e;*/
-	
-
-/*
-	struct k{
-		int d;
-	};
-
-	struct b{
-		int c;
-		char d;
-		struct c{
-			int a;
-		} e;
-	} b;
-*/
-}

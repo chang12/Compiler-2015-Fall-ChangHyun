@@ -73,10 +73,11 @@ void push_scope();
 struct ste* pop_scope();
 
 struct decl* makevardecl(struct decl* type);
-struct decl* makeptrdecl(struct decl* vardecl);
+struct decl* makeptrdecl(struct decl* ptrtodecl);
 struct decl* makearraydecl(struct decl* elementvar);
 struct decl* maketypedecl(int typeclass);
 struct decl* makestructdecl(struct decl* fields);
+struct decl* makefuncdecl(struct decl* returntypedecl);
 struct decl* makeconstdecl(struct decl* type);
 struct decl* makenumconstdecl(struct decl* type, int value);
 struct decl* makecharconstdecl(struct decl* type, char* value);
@@ -92,6 +93,7 @@ void declare(struct id* idptr, struct decl* declptr);
 void init_type();
 struct decl* findcurrentdecl(struct id* name);
 struct decl* findstructdecl(struct id* name);
+struct decl* findfuncdecl(struct id* name);
 
 struct decl* arrayaccess(struct decl* arrayptr, struct decl* indexptr);
 struct decl* structaccess(struct decl* structptr, struct id* fieldid);
