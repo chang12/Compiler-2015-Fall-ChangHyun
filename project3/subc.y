@@ -44,8 +44,8 @@ void 	REDUCE(char* s);
 %left 	'[' ']' '(' ')' '.' STRUCTOP
 
 /* Token and Types */
-%type<boolval>		pointers param_decl param_list
-%type<declptr>		type_specifier struct_specifier expr or_expr or_list and_expr and_list binary unary const_expr func_decl
+%type<boolval>		pointers param_list
+%type<declptr>		type_specifier struct_specifier expr or_expr or_list and_expr and_list binary unary const_expr func_decl param_decl
 %token<idptr> 		TYPE VOID STRUCT RETURN IF ELSE WHILE FOR BREAK CONTINUE ID
 %token				PRINT
 %token<stringval>	CHAR_CONST STRING STRUCTOP LOGICAL_OR LOGICAL_AND RELOP EQUOP INCOP DECOP
@@ -75,12 +75,27 @@ ext_def
 			REDUCE("ext_def -> type_specifier pointers ID '[' const_expr ']' ';'");
 		}
 		| func_decl ';'{
-			REDUCE("ext_def -> func_decl ';'");			
+			REDUCE("ext_def -> func_decl ';'");
+			if($1)
+			{
+				if(numoffuncdecl($1)>1)
+				{
+					yyerror("\nerror: function redeclaration\n");
+				}
+			}
 		}
 		| type_specifier ';'{
 			REDUCE("ext_def -> type_specifier ';'");
 		}
-		| func_decl compound_stmt{
+		| func_decl {
+			if($1)
+			{
+				push_scope();
+				if($1) declare(returnid, $1->returntype);
+				push_stelist($1->formals);
+			}
+
+		} compound_stmt{
 			REDUCE("ext_def -> func_decl compound_stmt");
 		}
 		| PRINT{
@@ -125,7 +140,7 @@ struct_specifier
 				// 새로운 struct type을 생성함
 			}
 		| STRUCT ID{
-			REDUCE("struct_specifier -> STRUCT ID");
+//			REDUCE("struct_specifier -> STRUCT ID");
 			// ID로 미리 정의되어있는 struct type 인지 확인한다.
 			struct decl* structdecl = findstructdecl($2);
 			$$ = NULL;
@@ -148,9 +163,23 @@ func_decl
 
 			if(funcdecl)
 			{
-				char errorMsg[100] = "\nerror: function name ";
-				yyerror(strcat(errorMsg, strcat($3->name," is redeclared\n")));
-				$$ = NULL;
+				if(check_samereturntype(funcdecl->returntype, $1, $2))
+				{
+					if(funcdecl->formals)
+					{
+						yyerror("\nerror: conflicting types for function\n");
+						$$ = NULL;
+					}
+					else
+					{
+						$$ = funcdecl;
+					}
+				}
+				else
+				{
+					yyerror("\nerror: conflicting types for function\n");
+					$$ = NULL;
+				}
 			}
 			else
 			{
@@ -158,11 +187,13 @@ func_decl
 				{
 					funcdecl = makefuncdecl(makeptrdecl(makeconstdecl($1)));
 					declare($3, funcdecl);
+					$$ = funcdecl;
 				}
 				else
 				{
 					funcdecl = makefuncdecl($1);
 					declare($3, funcdecl);
+					$$ = funcdecl;
 				}
 			}			
 		}
@@ -174,9 +205,23 @@ func_decl
 
 			if(funcdecl)
 			{
-				char errorMsg[100] = "\nerror: function name ";
-				yyerror(strcat(errorMsg, strcat($3->name," is redeclared\n")));
-				$$ = NULL;
+				if(check_samereturntype(funcdecl->returntype, $1, $2))
+				{
+					if(funcdecl->formals)
+					{
+						yyerror("\nerror: conflicting types for function\n");
+						$$ = NULL;
+					}
+					else
+					{
+						$$ = funcdecl;
+					}
+				}
+				else
+				{
+					yyerror("\nerror: conflicting types for function\n");
+					$$ = NULL;
+				}
 			}
 			else
 			{
@@ -184,11 +229,13 @@ func_decl
 				{
 					funcdecl = makefuncdecl(makeptrdecl(makeconstdecl($1)));
 					declare($3, funcdecl);
+					$$ = funcdecl;
 				}
 				else
 				{
 					funcdecl = makefuncdecl($1);
 					declare($3, funcdecl);
+					$$ = funcdecl;
 				}
 			}
 		}
@@ -198,9 +245,17 @@ func_decl
 
 			if(funcdecl)
 			{
-				char errorMsg[100] = "\nerror: function name ";
-				yyerror(strcat(errorMsg, strcat($3->name," is redeclared\n")));
-				$<declptr>$ = NULL;
+				if(check_samereturntype(funcdecl->returntype, $1, $2))
+				{
+					$<declptr>$ = funcdecl;
+				}
+				else
+				{
+					yyerror("\nerror: conflicting types for function\n");
+					$<declptr>$ = NULL;
+				}
+				push_scope();
+				declare(returnid, funcdecl->returntype);
 			}
 			else
 			{
@@ -228,13 +283,42 @@ func_decl
 			struct ste*	formals;
 			struct decl* funcdecl = $<declptr>5;
 
+			printf("\n\n%p\n\n",funcdecl);
+			printf($6? "true\n\n":"false\n\n");
+
 			if(funcdecl&&$6)
 			{
-				//comeback
+				printf("\n\ncheck1\n\n");
 				formals = pop_scope();
-				funcdecl->formals = formals->prev;
-				$$ = funcdecl;
-				declare($3, funcdecl);
+
+				if(funcdecl->formals)
+				{
+						printf("\n\ncheck2\n\n");
+					printf("\n\n%p\n\n",funcdecl->formals);
+					printf("\n\n%p\n\n",formals->prev);
+
+					if(check_sameformals(funcdecl->formals, formals->prev))
+					{
+						printf("\n\ncheck3\n\n");
+
+						$$ = funcdecl;
+						//comeback
+						declare($3, funcdecl);
+					}
+					else
+					{
+						printf("\n\ncheck4\n\n");		
+						yyerror("\nerror: conflicting types for function\n");
+						$$ = NULL;
+					}
+				}
+				else
+				{
+					printf("\n\ncheck5\n\n");
+					funcdecl->formals = formals->prev;
+					$$ = funcdecl;
+					declare($3, funcdecl);
+				}
 			}
 			else $$ = NULL;
 		}
@@ -265,9 +349,82 @@ param_list  /* list of formal parameter declaration */
 param_decl  /* formal parameter declaration */
 		: type_specifier pointers ID{
 			REDUCE("param_decl -> type_specifier pointers ID");
+			// ID 값으로 동일 scope에 존재하는 값인지 여부 체크
+			// 재정의하면 error
+			struct decl* declptr = findcurrentdecl($3);
+			if(declptr)
+			{
+				// 동일 name으로 존재하더라도, struct 정의라면 허용한다.
+				// ex) struct a{}; 하고 int a; 해도 문제 X
+				// 그러므로 findcurrentdecl로 반환된 declclass 까지 반환한다.
+				// 위의 내용을 findcurrentdecl 에서 수행하도록 옮겼다.
+				char errorMsg[100] = "\nerror: redeclaration of ";
+				yyerror(strcat(errorMsg, strcat($3->name,"\n")));
+				$$ = NULL;
+			}
+			else
+			{
+				if($1)
+				{
+					if($2)
+					{
+						// VAR PTR
+						struct decl* declptr = makevardecl(makeptrdecl(makevardecl($1)));
+						declare($3, declptr);
+						$$ = declptr;
+					}
+					else
+					{
+						// VAR
+						struct decl* declptr = makevardecl($1);
+						declare($3, declptr);
+						$$ = declptr;
+					}
+				}
+			}
 		}
 		| type_specifier pointers ID '[' const_expr ']'{
 			REDUCE("param_decl -> type_specifier pointers ID '[' const_expr ']'");
+			// ID integrity
+			struct decl* declptr = findcurrentdecl($3);
+			if(declptr)
+			{
+				char errorMsg[100] = "\nerror: redeclaration of ";
+				yyerror(strcat(errorMsg, strcat($3->name,"\n")));
+				$$ = NULL;
+			}
+			else
+			{
+				$$ = NULL;
+				// TYPE integrity
+				if($1)
+				{
+					// Array size integrity
+					if($5)
+					{
+						// CONST 이고, type이 inttype
+						if($5->declclass==CONST)
+						{
+							if($5->type==inttype)
+							{
+								struct decl* elementvar;
+								if($2)
+								{
+									elementvar = makevardecl(makeptrdecl(makevardecl($1)));
+								}
+								else
+								{
+									elementvar = makevardecl($1);
+								}
+								struct decl* declptr = makeconstdecl(makearraydecl(elementvar));
+								declare($3, declptr);
+								$$ = declptr;
+							}
+						}
+					}
+					
+				}
+			}
 		}
 		;
 
@@ -396,6 +553,7 @@ stmt
 		}
 		| RETURN expr ';'{
 			REDUCE("stmt -> RETURN expr ';'");
+			
 		}
 		| ';'{
 			REDUCE("stmt -> ';'");
@@ -672,6 +830,16 @@ struct ste* pop_scope()
 	free(temp);
 
 	return result;
+}
+
+void push_stelist(struct ste* formals)
+{
+	struct ste* entry = formals;
+	while(entry)
+	{
+		declare(entry->name, entry->decl);
+		entry = entry->prev;
+	}
 }
 
 struct decl* makevardecl(struct decl* type)
@@ -979,6 +1147,18 @@ struct decl* findfuncdecl(struct id* name)
 	return entry? entry->decl : NULL;
 }
 
+int numoffuncdecl(struct decl* funcdecl)
+{
+	struct ste* entry = cscope->top;
+	int num = 0;
+	while(entry)
+	{
+		if(entry->decl == funcdecl) num += 1;
+		entry = entry->prev;
+	}
+	return num;
+}
+
 
 struct decl* checkINCOPDECOP(struct decl* target)
 {
@@ -1031,6 +1211,129 @@ bool check_compatible(struct decl* declptr1, struct decl* declptr2)
 
 	}
 		
+	return result;
+}
+
+bool check_samereturntype(struct decl* type, struct decl* newtype, bool pointers)
+{
+	// func_decl 이 이미 존재하는 경우 호출된다.
+	// 그러므로 type이 NULL일 경우는 없다.
+	
+	bool result = false;
+
+	if(pointers)
+	{
+		if(type->typeclass==PTR)
+		{
+			result = (type->ptrto->type == newtype);
+		}
+	}
+	else
+	{
+		result = (type == newtype);
+	}
+
+	return result;
+}
+
+bool check_sameformals(struct ste* formals1, struct ste* formals2)
+{
+	bool result = true;
+	struct ste* entry1 = formals1;
+	struct ste* entry2 = formals2;
+	while(entry1)
+	{
+		printf("\n\n1\n\n");
+		if(!entry2)
+		{
+			printf("\n\n2\n\n");
+			result = false;
+			break;
+		}
+		else
+		{
+			struct decl* decl1 = entry1->decl;
+			struct decl* decl2 = entry2->decl;
+
+			if(decl1->declclass==CONST)
+			{
+				if(decl2->declclass==CONST)
+				{
+					struct decl* elementvar1 = decl1->type->elementvar;
+					struct decl* elementvar2 = decl2->type->elementvar;
+					
+					if(elementvar1->type->typeclass==PTR)
+					{
+						if(elementvar2->type->typeclass==PTR)
+						{
+							if(elementvar1->type->ptrto != elementvar2->type->ptrto)
+							{
+								result = false;
+								break;
+							}
+						}
+						else
+						{
+							result = false;
+							break;
+						}
+					}
+					else
+					{
+						if(elementvar1->type != elementvar2->type)
+						{
+							result = false;
+							break;
+						}
+					}
+				}
+				else
+				{
+					result = false;
+					break;
+				}
+			}
+			else
+			{
+				printf("\n\n3\n\n");
+				struct decl* type1 = decl1->type;
+				struct decl* type2 = decl2->type;
+
+				printf("\n\n%p\n\n",type1);
+				printf("\n\n%p\n\n",type2);
+				if(type1->typeclass == PTR)
+				{
+					printf("\n\n5\n\n");
+					if(type2->typeclass = PTR)
+					{	
+						if(type1->ptrto->type != type2->ptrto->type)
+						{
+							result = false;
+							break;
+						}
+					}
+					else
+					{
+						result = false;
+						break;
+					}
+				}
+				else
+				{
+					printf("\n\n4\n\n");
+					printf("\n\n%p\n\n",type1);
+					printf("\n\n%p\n\n",type2);
+					if(type1 != type2)
+					{
+						result = false;
+						break;
+					}
+				}
+			}
+		}
+		entry1 = entry1->prev;
+		entry2 = entry2->prev;
+	}
 	return result;
 }
 

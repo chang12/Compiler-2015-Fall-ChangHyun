@@ -71,6 +71,7 @@ int read_line();
 */
 void push_scope();
 struct ste* pop_scope();
+void push_stelist(struct ste* formals);
 
 struct decl* makevardecl(struct decl* type);
 struct decl* makeptrdecl(struct decl* ptrtodecl);
@@ -88,12 +89,15 @@ bool check_is_var(struct decl* target);
 bool check_is_array(struct decl* declptr);
 bool check_is_struct_type(struct decl* target);
 bool check_compatible(struct decl* declptr1, struct decl* declptr2);
+bool check_samereturntype(struct decl* type, struct decl* newtype, bool pointers);
+bool check_sameformals(struct ste* formals1, struct ste* formals2);
 
 void declare(struct id* idptr, struct decl* declptr);
 void init_type();
 struct decl* findcurrentdecl(struct id* name);
 struct decl* findstructdecl(struct id* name);
 struct decl* findfuncdecl(struct id* name);
+int numoffuncdecl(struct decl* funcdecl);
 
 struct decl* arrayaccess(struct decl* arrayptr, struct decl* indexptr);
 struct decl* structaccess(struct decl* structptr, struct id* fieldid);

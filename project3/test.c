@@ -19,5 +19,8 @@
 	char f;
 };*/
 
-int func1(int x, int y);
-
+int foo(int x, int y);
+int foo(int x, int y)
+{
+	return x+y;
+}
