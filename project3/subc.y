@@ -45,7 +45,7 @@ void 	REDUCE(char* s);
 
 /* Token and Types */
 %type<boolval>		pointers param_list
-%type<declptr>		type_specifier struct_specifier expr or_expr or_list and_expr and_list binary unary const_expr func_decl param_decl
+%type<declptr>		type_specifier struct_specifier expr or_expr or_list and_expr and_list binary unary const_expr func_decl param_decl args
 %token<idptr> 		TYPE VOID STRUCT RETURN IF ELSE WHILE FOR BREAK CONTINUE ID
 %token				PRINT
 %token<stringval>	CHAR_CONST STRING STRUCTOP LOGICAL_OR LOGICAL_AND RELOP EQUOP INCOP DECOP
@@ -679,15 +679,19 @@ and_list
 binary
 		: binary RELOP binary{
 			REDUCE("binary -> binary RELOP binary");
+			$$ = optype($1, $3);
 		}
 		| binary EQUOP binary{
 			REDUCE("binary -> binary EQUOP binary");
+			$$ = optype($1, $3);
 		}
 		| binary '+' binary{
 			REDUCE("binary -> binary '+' binary");
+			$$ = plustype($1, $3);
 		}
 		| binary '-' binary{
 			REDUCE("binary -> binary '-' binary");
+			$$ = minustype($1, $3);
 		}
 		| unary %prec '='{
 			REDUCE("binary -> unary");
@@ -800,18 +804,36 @@ unary
 		}
 		| unary '(' args ')'{
 			REDUCE("unary -> unary '(' args ')'");
+			if($1)
+			{
+				check_funccall($1, $3);
+			}
 		}
 		| unary '(' ')'{
 			REDUCE("unary -> unary '(' ')'");
+			if($1)
+			{
+				check_funccall($1, NULL);
+			}
 		}
 		;
 
 args    /* actual parameters(function arguments) transferred to function */
 		: expr{
 			REDUCE("args -> expr");
+			if($1)
+			{
+				$$ = copydecl($1);
+			}
 		}
-		| args ',' expr{
+		| expr ',' args{
 			REDUCE("args -> args ',' expr");
+			if($1 && $3) 
+			{
+				$1->next = $3;
+				$$ = $1;
+			}
+			else $$ = NULL;
 		}
 		;
 
@@ -1208,7 +1230,36 @@ struct decl* checkINCOPDECOP(struct decl* target)
 
 bool check_is_var(struct decl* target)
 {
-	if(target->declclass==VAR) return true;
+	if(!target) return false;
+	else if(target->declclass==VAR) return true;
+	else return false;
+}
+
+bool check_is_const(struct decl* target)
+{
+	if(!target) return false;
+	else if(target->declclass==CONST) return true;
+	else return false;
+}
+
+bool check_is_int(struct decl* target)
+{
+	if(!target) return false;
+	else if(target->type == inttype) return true;
+	else return false;
+}
+
+bool check_is_ptr(struct decl* target)
+{
+	if(!target) return false;
+	else if(target->type->typeclass == PTR) return true;
+	else return false;
+}
+
+bool check_is_char(struct decl* target)
+{
+	if(!target) return false;
+	else if(target->type == chartype) return true;
 	else return false;
 }
 
@@ -1368,6 +1419,26 @@ bool check_sameformals(struct ste* formals1, struct ste* formals2)
 	return result;
 }
 
+struct decl* check_funccall(struct decl* funcdecl, struct ste* args)
+{
+	if(funcdecl->declclass != FUNC)
+	{
+		// FUNC 가 아닌데 Function call
+		yyerror("\nerror: not a function\n");
+		return NULL;
+	}
+	else if(!check_sameformals(funcdecl->formals, args))
+	{
+		// formals랑 args랑 mismatch
+		yyerror("\nerror: actual args are not equal to formal args\n");
+		return NULL;
+	}
+	else
+	{
+		return makeconstdecl(funcdecl->returntype);
+	}
+}
+
 struct decl* arrayaccess(struct decl* arrayptr, struct decl* indexptr)
 {
 
@@ -1416,6 +1487,91 @@ struct decl* structptraccess(struct decl* structptr, struct id* fieldid)
 	}
 
 	return result;
+}
+
+struct decl* copydecl(struct decl* declptr)
+{
+	struct decl* copy = (struct decl*)malloc(sizeof(struct decl));
+
+	copy->declclass = declptr->declclass;
+	copy->type = declptr->type;
+	copy->value = declptr->value;
+	copy->charconst = declptr->charconst;
+	copy->string = declptr->string;
+	copy->formals = declptr->formals;
+	copy->returntype = declptr->returntype;
+	copy->typeclass = declptr->typeclass;
+	copy->elementvar = declptr->elementvar;
+	copy->num_index = declptr->num_index;
+	copy->fieldlist = declptr->fieldlist;
+	copy->ptrto = declptr->ptrto;
+	copy->scope = declptr->scope;
+	copy->next = NULL;
+}
+
+struct decl* plustype(struct decl* op1, struct decl* op2)
+{
+	struct decl* result = NULL;
+	bool isError = false;
+	// 만약 둘중 하나라도 NULL
+	if(op1 && op2)
+	{
+		if(check_is_int(op1))
+		{
+			if(check_is_int(op2)||check_is_ptr(op2)) result = op2;
+			else isError = true;
+		}
+		else if(check_is_ptr(op1))
+		{
+			if(check_is_int(op2)) result = op1;
+			else isError = true;
+		}
+		else isError = true;
+	}
+
+	if(isError) yyerror("\nerror: not computable\n");
+
+	return result;
+}
+
+struct decl* minustype(struct decl* op1, struct decl* op2)
+{
+	struct decl* result = NULL;
+	bool isError = false;
+
+	if(op1 && op2)
+	{
+		if(check_is_int(op1) && check_is_int(op2)) result = op1;
+		else if(check_is_ptr(op1) && check_is_int(op2)) result = op1;
+		else isError = true;
+	}
+
+	if(isError) yyerror("\nerror: not computable\n");
+
+	return result;
+}
+
+struct decl* optype(struct decl* op1, struct decl* op2)
+{
+	bool isError = false;
+	
+	if(op1 && op2)
+	{
+		if(check_is_char(op1) && check_is_char(op2)) ;
+		else if(check_is_int(op1) && check_is_int(op2)) ;
+		else if(check_is_ptr(op1) && check_is_ptr(op2))
+		{
+			if(op1->type->ptrto->type != op2->type->ptrto->type) isError = true;
+		}
+		else isError = true;
+	}
+
+	if(isError)
+	{
+		yyerror("\nerror: not computable\n");
+		return NULL;
+	}
+	else return makenumconstdecl(inttype, 1);
 }
 
 void printste()

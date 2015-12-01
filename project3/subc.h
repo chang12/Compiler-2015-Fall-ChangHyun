@@ -86,11 +86,16 @@ struct decl* makestringconstdecl(struct decl* type, char* value);
 
 struct decl* checkINCOPDECOP(struct decl* target);
 bool check_is_var(struct decl* target);
+bool check_is_const(struct decl* target);
+bool check_is_int(struct decl* target);
+bool check_is_ptr(struct decl* target);
+bool check_is_char(struct decl* target);
 bool check_is_array(struct decl* declptr);
 bool check_is_struct_type(struct decl* target);
 bool check_compatible(struct decl* declptr1, struct decl* declptr2);
 bool check_samereturntype(struct decl* type, struct decl* newtype, bool pointers);
 bool check_sameformals(struct ste* formals1, struct ste* formals2);
+struct decl* check_funccall(struct decl* funcdecl, struct ste* args);
 
 void declare(struct id* idptr, struct decl* declptr);
 void init_type();
@@ -103,6 +108,11 @@ bool findreturnid();
 struct decl* arrayaccess(struct decl* arrayptr, struct decl* indexptr);
 struct decl* structaccess(struct decl* structptr, struct id* fieldid);
 struct decl* structptraccess(struct decl* structptr, struct id* fieldid);
+struct decl* copydecl(struct decl* declptr);
+
+struct decl* plustype(struct decl* op1, struct decl* op2);
+struct decl* minustype(struct decl* op1, struct decl* op2);
+struct decl* optype(struct decl* op1, struct decl* op2);
 
 // special function for debugging
 void printste();
