@@ -78,7 +78,7 @@ ext_def
 			REDUCE("ext_def -> func_decl ';'");
 			if($1)
 			{
-				if(numoffuncdecl($1)>1)
+				if($1->value == 1)
 				{
 					yyerror("\nerror: function redeclaration\n");
 				}
@@ -87,15 +87,8 @@ ext_def
 		| type_specifier ';'{
 			REDUCE("ext_def -> type_specifier ';'");
 		}
-		| func_decl {
-			if($1)
-			{
-				push_scope();
-				if($1) declare(returnid, $1->returntype);
-				push_stelist($1->formals);
-			}
-
-		} compound_stmt{
+		| func_decl compound_stmt{
+			if($1) $1->value = 2;
 			REDUCE("ext_def -> func_decl compound_stmt");
 		}
 		| PRINT{
@@ -170,8 +163,14 @@ func_decl
 						yyerror("\nerror: conflicting types for function\n");
 						$$ = NULL;
 					}
+					else if(funcdecl->value == 2)
+					{
+						yyerror("\nerror: function redeclaration\n");
+						$$ = NULL;
+					}
 					else
 					{
+						funcdecl->value = 1;
 						$$ = funcdecl;
 					}
 				}
@@ -212,8 +211,14 @@ func_decl
 						yyerror("\nerror: conflicting types for function\n");
 						$$ = NULL;
 					}
+					else if(funcdecl->value == 2)
+					{
+						yyerror("\nerror: function redeclaration\n");
+						$$ = NULL;
+					}
 					else
 					{
+						funcdecl->value = 1;
 						$$ = funcdecl;
 					}
 				}
@@ -247,7 +252,16 @@ func_decl
 			{
 				if(check_samereturntype(funcdecl->returntype, $1, $2))
 				{
-					$<declptr>$ = funcdecl;
+					if(funcdecl->value == 2)
+					{
+						yyerror("\nerror: function redeclaration\n");
+						$<declptr>$ = NULL;
+					}
+					else
+					{
+						funcdecl->value = 1;
+						$<declptr>$ = funcdecl;
+					}
 				}
 				else
 				{
@@ -280,47 +294,44 @@ func_decl
 			// 그러므로 param_list 의 NULL 여부를 체크한다.
 			// 그리고 func_decl 에 declptr을 매기는 작업도, 여기서 해준다.
 
-			struct ste*	formals;
+			struct ste*	formals = pop_scope();
 			struct decl* funcdecl = $<declptr>5;
 
-			printf("\n\n%p\n\n",funcdecl);
-			printf($6? "true\n\n":"false\n\n");
 
-			if(funcdecl&&$6)
+			bool clear = true;
+
+			if(!funcdecl)
 			{
-				printf("\n\ncheck1\n\n");
-				formals = pop_scope();
-
-				if(funcdecl->formals)
+				$$ = NULL;
+				clear = false;
+			}
+			else if(!$6)
+			{
+				// funcdecl exists, but param_list error
+				if(funcdecl->value == 1) funcdecl->value = 0;
+				$$ = NULL;
+				clear = false;
+			}
+			else
+			{
+				if(funcdecl->value == 1)
 				{
-						printf("\n\ncheck2\n\n");
-					printf("\n\n%p\n\n",funcdecl->formals);
-					printf("\n\n%p\n\n",formals->prev);
-
-					if(check_sameformals(funcdecl->formals, formals->prev))
+					if(!check_sameformals(funcdecl->formals, formals->prev))
 					{
-						printf("\n\ncheck3\n\n");
-
-						$$ = funcdecl;
-						//comeback
-						declare($3, funcdecl);
-					}
-					else
-					{
-						printf("\n\ncheck4\n\n");		
 						yyerror("\nerror: conflicting types for function\n");
+						funcdecl->value = 0;
 						$$ = NULL;
+						clear = false;
 					}
-				}
-				else
-				{
-					printf("\n\ncheck5\n\n");
-					funcdecl->formals = formals->prev;
-					$$ = funcdecl;
-					declare($3, funcdecl);
 				}
 			}
-			else $$ = NULL;
+
+			if(clear)
+			{
+				funcdecl->formals = formals->prev;
+				$$ = funcdecl;
+				declare($3, funcdecl);
+			}
 		}
 	;
 
@@ -358,7 +369,7 @@ param_decl  /* formal parameter declaration */
 				// ex) struct a{}; 하고 int a; 해도 문제 X
 				// 그러므로 findcurrentdecl로 반환된 declclass 까지 반환한다.
 				// 위의 내용을 findcurrentdecl 에서 수행하도록 옮겼다.
-				char errorMsg[100] = "\nerror: redeclaration of ";
+				char errorMsg[100] = "\nerror: redeclaration of \n";
 				yyerror(strcat(errorMsg, strcat($3->name,"\n")));
 				$$ = NULL;
 			}
@@ -521,8 +532,23 @@ def
 		;
 
 compound_stmt
-		: '{' local_defs stmt_list '}'{
+		: '{' {
+			
+			push_scope();
+			if(!findcurrentdecl(returnid))
+			{
+				if($<declptr>0)
+				//comeback
+				{
+					declare(returnid, $<declptr>0->returntype);
+					push_stelist($<declptr>0->formals);
+				}
+				else declare(returnid, NULL);
+			}
+
+		} local_defs stmt_list '}'{
 			REDUCE("compound_stmt -> '{' local_defs stmt_list '}'");
+			pop_scope();
 		}
 		;
 
@@ -1147,16 +1173,27 @@ struct decl* findfuncdecl(struct id* name)
 	return entry? entry->decl : NULL;
 }
 
-int numoffuncdecl(struct decl* funcdecl)
+struct decl* findwholedecl(struct id* name)
 {
 	struct ste* entry = cscope->top;
-	int num = 0;
 	while(entry)
 	{
-		if(entry->decl == funcdecl) num += 1;
-		entry = entry->prev;
+		if(entry->name == name) break;
+		else entry = entry->prev;
 	}
-	return num;
+	return entry? entry->decl : NULL;
+}
+
+bool findreturnid()
+{
+	struct ste* entry = cscope->top;
+	struct ste* last = cscope->prev->top;
+	while(entry!=last)
+	{
+		if(entry->name == returnid) break;
+		else entry = entry->prev;
+	}
+	return (entry==last? true : false);
 }
 
 
@@ -1243,10 +1280,8 @@ bool check_sameformals(struct ste* formals1, struct ste* formals2)
 	struct ste* entry2 = formals2;
 	while(entry1)
 	{
-		printf("\n\n1\n\n");
 		if(!entry2)
 		{
-			printf("\n\n2\n\n");
 			result = false;
 			break;
 		}
@@ -1295,15 +1330,11 @@ bool check_sameformals(struct ste* formals1, struct ste* formals2)
 			}
 			else
 			{
-				printf("\n\n3\n\n");
 				struct decl* type1 = decl1->type;
 				struct decl* type2 = decl2->type;
 
-				printf("\n\n%p\n\n",type1);
-				printf("\n\n%p\n\n",type2);
 				if(type1->typeclass == PTR)
 				{
-					printf("\n\n5\n\n");
 					if(type2->typeclass = PTR)
 					{	
 						if(type1->ptrto->type != type2->ptrto->type)
@@ -1320,9 +1351,6 @@ bool check_sameformals(struct ste* formals1, struct ste* formals2)
 				}
 				else
 				{
-					printf("\n\n4\n\n");
-					printf("\n\n%p\n\n",type1);
-					printf("\n\n%p\n\n",type2);
 					if(type1 != type2)
 					{
 						result = false;
@@ -1334,6 +1362,9 @@ bool check_sameformals(struct ste* formals1, struct ste* formals2)
 		entry1 = entry1->prev;
 		entry2 = entry2->prev;
 	}
+
+	// 두번째 정의된 formals의 개수가, 첫번째 정의된 formals의 개수보다 많음
+	if(!entry1 && entry2) result = false;
 	return result;
 }
 

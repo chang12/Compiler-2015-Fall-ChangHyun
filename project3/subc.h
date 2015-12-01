@@ -97,7 +97,8 @@ void init_type();
 struct decl* findcurrentdecl(struct id* name);
 struct decl* findstructdecl(struct id* name);
 struct decl* findfuncdecl(struct id* name);
-int numoffuncdecl(struct decl* funcdecl);
+struct decl* findwholedecl(struct id* name);
+bool findreturnid();
 
 struct decl* arrayaccess(struct decl* arrayptr, struct decl* indexptr);
 struct decl* structaccess(struct decl* structptr, struct id* fieldid);
