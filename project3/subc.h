@@ -92,10 +92,11 @@ bool check_is_ptr(struct decl* target);
 bool check_is_char(struct decl* target);
 bool check_is_array(struct decl* declptr);
 bool check_is_struct_type(struct decl* target);
-bool check_compatible(struct decl* declptr1, struct decl* declptr2);
+bool check_compatibledecl(struct decl* declptr1, struct decl* declptr2);
+bool check_compatibletype(struct decl* type1, struct decl* type2);
 bool check_samereturntype(struct decl* type, struct decl* newtype, bool pointers);
-bool check_sameformals(struct ste* formals1, struct ste* formals2);
-struct decl* check_funccall(struct decl* funcdecl, struct ste* args);
+bool check_sameformals(struct decl* decl1, struct decl* decl2);
+struct decl* check_funccall(struct decl* funcdecl, struct decl* args);
 
 void declare(struct id* idptr, struct decl* declptr);
 void init_type();
@@ -113,8 +114,12 @@ struct decl* copydecl(struct decl* declptr);
 struct decl* plustype(struct decl* op1, struct decl* op2);
 struct decl* minustype(struct decl* op1, struct decl* op2);
 struct decl* optype(struct decl* op1, struct decl* op2);
+struct decl* logicaltype(struct decl* op1, struct decl* op2);
+
+
+void connectdecl(struct ste* start);
 
 // special function for debugging
-void printste();
+void printste(struct ste* start);
 
 #endif

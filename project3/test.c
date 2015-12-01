@@ -19,16 +19,16 @@
 	char f;
 };*/
 
-struct s{};
+int boo();
+int* foo();
 
-int foo(int x, int y)
+int* foo()
 {
 	int i;
-	char j;
-	char k;
-	struct s* b;
-	struct s* c;
+	int j;
+	char w;
+	int k;
 
-	i = (b==c);
-	
+	k = i && w;
 }
+

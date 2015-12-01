@@ -92,7 +92,7 @@ ext_def
 			REDUCE("ext_def -> func_decl compound_stmt");
 		}
 		| PRINT{
-			printste();
+			printste(cscope->top);
 		}
 		;
 
@@ -295,6 +295,7 @@ func_decl
 			// 그리고 func_decl 에 declptr을 매기는 작업도, 여기서 해준다.
 
 			struct ste*	formals = pop_scope();
+			connectdecl(formals);
 			struct decl* funcdecl = $<declptr>5;
 
 
@@ -316,7 +317,7 @@ func_decl
 			{
 				if(funcdecl->value == 1)
 				{
-					if(!check_sameformals(funcdecl->formals, formals->prev))
+					if(!check_sameformals(funcdecl->formals->decl, formals->prev->decl))
 					{
 						yyerror("\nerror: conflicting types for function\n");
 						funcdecl->value = 0;
@@ -527,7 +528,7 @@ def
 			REDUCE("def -> func_decl ';'");
 		}
 		| PRINT{
-			printste();
+			printste(cscope->top);
 		}
 		;
 
@@ -576,10 +577,22 @@ stmt
 		}
 		| RETURN ';'{
 			REDUCE("stmt -> RETURN ';'");
+			struct decl* type = findwholedecl(returnid);
+			if(type != voidtype) 
+			{
+				yyerror("\nerror: return value is not return type\n");
+			}
 		}
 		| RETURN expr ';'{
 			REDUCE("stmt -> RETURN expr ';'");
-			
+			struct decl* type = findwholedecl(returnid);
+			if($2)
+			{
+				if(!check_compatibletype($2->type, type))
+				{
+					yyerror("\nerror: return value is not return type\n");
+				}	
+			}
 		}
 		| ';'{
 			REDUCE("stmt -> ';'");
@@ -603,7 +616,7 @@ stmt
 			REDUCE("stmt -> CONTINUE ';'");
 		}
 		| PRINT{
-			printste();
+			printste(cscope->top);
 		}
 		;
 
@@ -627,7 +640,7 @@ expr
 			bool result = false;
 			if(check_is_var($1))
 			{
-				if(check_compatible($1, $3)) $$ = $1;
+				if(check_compatibledecl($1, $3)) $$ = $1;
 				else
 				{
 					yyerror("\nerror: LHS and RHS are not same type\n");
@@ -655,6 +668,7 @@ or_expr
 or_list
 		: or_list LOGICAL_OR and_expr{
 			REDUCE("or_list -> or_list LOGICAL_OR and_expr");
+			$$ = logicaltype($1, $3);
 		}
 		| and_expr{
 			REDUCE("or_list -> and_expr");
@@ -670,6 +684,7 @@ and_expr
 and_list
 		: and_list LOGICAL_AND binary{
 			REDUCE("and_list -> and_list LOGICAL_AND binary");
+			$$ = logicaltype($1, $3);
 		}
 		| binary{
 			REDUCE("and_list -> binary");
@@ -724,7 +739,7 @@ unary
 
 			// ID에 대응되는 decl이 없다면, findcurrentdecl은 NULL을 리턴
 			
-			struct decl* declptr = findcurrentdecl($1);
+			struct decl* declptr = findwholedecl($1);
 
 			char errorMsg[100] = "\nerror: undefined variable ";
 
@@ -804,17 +819,12 @@ unary
 		}
 		| unary '(' args ')'{
 			REDUCE("unary -> unary '(' args ')'");
-			if($1)
-			{
-				check_funccall($1, $3);
-			}
+			$$ = check_funccall($1, $3);
+
 		}
 		| unary '(' ')'{
 			REDUCE("unary -> unary '(' ')'");
-			if($1)
-			{
-				check_funccall($1, NULL);
-			}
+			$$ = check_funccall($1, NULL);
 		}
 		;
 
@@ -1284,21 +1294,39 @@ bool check_is_struct_type(struct decl* target)
 	return result;
 }
 
-bool check_compatible(struct decl* declptr1, struct decl* declptr2)
+bool check_compatibledecl(struct decl* declptr1, struct decl* declptr2)
 {
 	bool result = false;
 
 	if(declptr1 && declptr2) 
 	{
-		if(declptr1->type==declptr2->type) result = true;
-		else if((declptr1->type->typeclass==PTR)&&(declptr2->type->typeclass==PTR))
+		if(declptr1->type && declptr2->type)
 		{
+			if(declptr1->type==declptr2->type) result = true;
+			else if((declptr1->type->typeclass==PTR)&&(declptr2->type->typeclass==PTR))
+			{
 			
-			if(declptr1->type->ptrto->type==declptr2->type->ptrto->type) result = true;	
+				if(declptr1->type->ptrto->type==declptr2->type->ptrto->type) result = true;	
+			}
 		}
-
 	}
 		
+	return result;
+}
+
+bool check_compatibletype(struct decl* type1, struct decl* type2)
+{
+	struct decl* declptr1 = (struct decl*)malloc(sizeof(struct decl));
+	struct decl* declptr2 = (struct decl*)malloc(sizeof(struct decl));
+
+	declptr1->type = type1;
+	declptr2->type = type2;
+
+	bool result = check_compatibledecl(declptr1, declptr2);
+
+	free(declptr1);
+	free(declptr2);
+
 	return result;
 }
 
@@ -1324,23 +1352,19 @@ bool check_samereturntype(struct decl* type, struct decl* newtype, bool pointers
 	return result;
 }
 
-bool check_sameformals(struct ste* formals1, struct ste* formals2)
+bool check_sameformals(struct decl* decl1, struct decl* decl2)
 {
 	bool result = true;
-	struct ste* entry1 = formals1;
-	struct ste* entry2 = formals2;
-	while(entry1)
+	
+	while(decl1)
 	{
-		if(!entry2)
+		if(!decl2)
 		{
 			result = false;
 			break;
 		}
 		else
 		{
-			struct decl* decl1 = entry1->decl;
-			struct decl* decl2 = entry2->decl;
-
 			if(decl1->declclass==CONST)
 			{
 				if(decl2->declclass==CONST)
@@ -1410,27 +1434,36 @@ bool check_sameformals(struct ste* formals1, struct ste* formals2)
 				}
 			}
 		}
-		entry1 = entry1->prev;
-		entry2 = entry2->prev;
+		decl1 = decl1->next;
+		decl2 = decl2->next;
 	}
 
 	// 두번째 정의된 formals의 개수가, 첫번째 정의된 formals의 개수보다 많음
-	if(!entry1 && entry2) result = false;
+	if(!decl1 && decl2) result = false;
 	return result;
 }
 
-struct decl* check_funccall(struct decl* funcdecl, struct ste* args)
+struct decl* check_funccall(struct decl* funcdecl, struct decl* args)
 {
-	if(funcdecl->declclass != FUNC)
+
+	if(!funcdecl) return NULL;
+	else if(funcdecl->declclass != FUNC)
 	{
-		// FUNC 가 아닌데 Function call
 		yyerror("\nerror: not a function\n");
 		return NULL;
 	}
-	else if(!check_sameformals(funcdecl->formals, args))
+	else if(!funcdecl->formals)
 	{
-		// formals랑 args랑 mismatch
-		yyerror("\nerror: actual args are not equal to formal args\n");
+		if(!args) return makeconstdecl(funcdecl->returntype);
+		else
+		{
+			yyerror("\nerror: actual args are not equal to formals args\n");
+			return NULL;
+		}
+	}
+	else if(!check_sameformals(funcdecl->formals->decl, args))
+	{
+		yyerror("\nerror: actual args are not equal to formals args\n");
 		return NULL;
 	}
 	else
@@ -1574,15 +1607,57 @@ struct decl* optype(struct decl* op1, struct decl* op2)
 	else return makenumconstdecl(inttype, 1);
 }
 
-void printste()
+struct decl* logicaltype(struct decl* op1, struct decl* op2)
 {
-	struct ste* entry;
-	for(entry=cscope->top;entry;entry=entry->prev)
+	bool isError = false;
+	struct decl* result = NULL;
+
+	if(op1 && op2)
 	{
-		printf("%p\t%p\t%s\t%d\t%d\n", entry, entry->name, entry->name->name,entry->decl->declclass,entry->decl->typeclass);
+		if(!(op1->type==inttype) || !(op2->type==inttype))
+		{
+			isError = true;
+			result = NULL;
+		}
+		else result = makenumconstdecl(inttype, 1);
 	}
-	printf("\n");
-	printf("cscope: %s\n",cscope->top->name->name);
+	else
+	{
+		result = NULL;
+	}
+
+	if(isError) yyerror("\nerror: not int type\n");
+
+	return result;
+}
+
+void connectdecl(struct ste* start)
+{
+	struct ste* entry = start;
+	if(entry)
+	{
+		while(entry->prev)
+		{
+			entry->decl->next = entry->prev->decl;
+			entry = entry->prev;
+		}
+	}
+
+	return;
+}
+
+void printste(struct ste* start)
+{
+	struct ste* entry = start;
+	fprintf(stderr,"\n");
+	while(entry)
+	{
+		fprintf(stderr,"pointer: %p\n", entry);
+		fprintf(stderr,"name: %s\n",entry->name->name);
+		entry = entry->prev;
+	}
+	fprintf(stderr,"\n");
+
 }
 
 
