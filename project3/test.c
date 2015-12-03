@@ -14,21 +14,14 @@
 }*/
 
 
-/*struct a{
-	int e;
-	char f;
-};*/
-
-int boo();
-int* foo();
-
-int* foo()
+struct a{
+	struct b{} i;
+};
+/*
+int main()
 {
-	int i;
-	int j;
-	char w;
-	int k;
-
-	k = i && w;
+	struct b{
+		int i;
+	};
 }
-
+*/
