@@ -55,22 +55,18 @@ void 	REDUCE(char* s);
 %%
 program
 		: ext_def_list{
-			REDUCE("program -> ext_def_list");
 		}	
 		;
 
 ext_def_list
 		: ext_def_list ext_def{
-			REDUCE("ext_def_list -> ext_def_list ext_def");
 		}
 		| /* empty */{
-			REDUCE("ext_def_list -> epsilon");
 		}
 		;
 
 ext_def
 		: type_specifier pointers ID ';'{
-			REDUCE("ext_def -> type_specifier pointers ID ';'");
 			// ID 값으로 동일 scope에 존재하는 값인지 여부 체크
 			// 재정의하면 error
 			struct decl* declptr = findcurrentdecl($3);
@@ -80,8 +76,8 @@ ext_def
 				// ex) struct a{}; 하고 int a; 해도 문제 X
 				// 그러므로 findcurrentdecl로 반환된 declclass 까지 반환한다.
 				// 위의 내용을 findcurrentdecl 에서 수행하도록 옮겼다.
-				char errorMsg[100] = "\nerror: redeclaration of ";
-				yyerror(strcat(errorMsg, strcat($3->name,"\n")));
+				char errorMsg[100] = "error: redeclaration of ";
+				yyerror(strcat(errorMsg, $3->name));
 			}
 			else
 			{
@@ -101,14 +97,13 @@ ext_def
 			}
 		}
 		| type_specifier pointers ID '[' const_expr ']' ';'{
-			REDUCE("ext_def -> type_specifier pointers ID '[' const_expr ']' ';'");
 
 			// ID integrity
 			struct decl* declptr = findcurrentdecl($3);
 			if(declptr)
 			{
-				char errorMsg[100] = "\nerror: redeclaration of ";
-				yyerror(strcat(errorMsg, strcat($3->name,"\n")));
+				char errorMsg[100] = "error: redeclaration of ";
+				yyerror(strcat(errorMsg, $3->name));
 			}
 			else
 			{
@@ -142,37 +137,31 @@ ext_def
 			}
 		}
 		| func_decl ';'{
-			REDUCE("ext_def -> func_decl ';'");
 			if($1)
 			{
 				if($1->value == 1)
 				{
-					yyerror("\nerror: function redeclaration\n");
+					yyerror("error: function redeclaration");
 				}
 			}
 		}
 		| type_specifier ';'{
-			REDUCE("ext_def -> type_specifier ';'");
 		}
 		| func_decl compound_stmt{
 			if($1) $1->value = 2;
-			REDUCE("ext_def -> func_decl compound_stmt");
 		}
 		;
 
 type_specifier
 		: TYPE{
-			REDUCE("type_specifier -> TYPE");
 			if(!strcmp($1->name,"int")) $$ = inttype;
 			else if(!strcmp($1->name,"char")) $$ = chartype;
 			else $$ = NULL;
 		}
 		| VOID{
-			REDUCE("type_specifier -> VOID");
 			$$ = voidtype;
 		}
 		| struct_specifier{
-			REDUCE("type_specifier -> struct_specifier");
 		}
 		;
 
@@ -186,22 +175,20 @@ struct_specifier
 				struct ste* fields = pop_scope();
 				if(findstructdecl($2))
 				{
-					yyerror("\nerror: redeclaration\n");
+					yyerror("error: redeclaration");
 					$$ = NULL;
 				}
 				else declare($2, $$=makestructdecl(fields));
-				REDUCE("struct_specifier -> STRUCT ID '{' def_list '}'");
 				// 새로운 struct type을 생성함
 			}
 		| STRUCT ID{
-//			REDUCE("struct_specifier -> STRUCT ID");
 			// ID로 미리 정의되어있는 struct type 인지 확인한다.
 			struct decl* structdecl = findstructdecl($2);
 			$$ = NULL;
 			if(structdecl) $$ = structdecl;
 			else
 			{
-				yyerror("\nerror: incomplete type error\n");
+				yyerror("error: incomplete type error");
 			}
 
 		}
@@ -209,7 +196,6 @@ struct_specifier
 
 func_decl
 		: type_specifier pointers ID '(' ')'{
-			REDUCE("func_decl -> type_specifier pointers ID '(' ')'");
 			
 			// 존재하는 func 이름인지 확인
 			struct decl* funcdecl = findfuncdecl($3);
@@ -220,12 +206,12 @@ func_decl
 				{
 					if(funcdecl->formals)
 					{
-						yyerror("\nerror: conflicting types for function\n");
+						yyerror("error: conflicting types for function");
 						$$ = NULL;
 					}
 					else if(funcdecl->value == 2)
 					{
-						yyerror("\nerror: function redeclaration\n");
+						yyerror("error: function redeclaration");
 						$$ = NULL;
 					}
 					else
@@ -236,7 +222,7 @@ func_decl
 				}
 				else
 				{
-					yyerror("\nerror: conflicting types for function\n");
+					yyerror("error: conflicting types for function");
 					$$ = NULL;
 				}
 			}
@@ -257,7 +243,6 @@ func_decl
 			}			
 		}
 		| type_specifier pointers ID '(' VOID ')'{
-			REDUCE("func_decl -> type_specifier pointers ID '(' VOID ')'");
 
 			// 존재하는 func 이름인지 확인
 			struct decl* funcdecl = findfuncdecl($3);
@@ -268,12 +253,12 @@ func_decl
 				{
 					if(funcdecl->formals)
 					{
-						yyerror("\nerror: conflicting types for function\n");
+						yyerror("error: conflicting types for function");
 						$$ = NULL;
 					}
 					else if(funcdecl->value == 2)
 					{
-						yyerror("\nerror: function redeclaration\n");
+						yyerror("error: function redeclaration");
 						$$ = NULL;
 					}
 					else
@@ -284,7 +269,7 @@ func_decl
 				}
 				else
 				{
-					yyerror("\nerror: conflicting types for function\n");
+					yyerror("error: conflicting types for function");
 					$$ = NULL;
 				}
 			}
@@ -314,7 +299,7 @@ func_decl
 				{
 					if(funcdecl->value == 2)
 					{
-						yyerror("\nerror: function redeclaration\n");
+						yyerror("error: function redeclaration");
 						$<declptr>$ = NULL;
 					}
 					else
@@ -325,7 +310,7 @@ func_decl
 				}
 				else
 				{
-					yyerror("\nerror: conflicting types for function\n");
+					yyerror("error: conflicting types for function");
 					$<declptr>$ = NULL;
 				}
 				push_scope();
@@ -349,7 +334,6 @@ func_decl
 			}
 		}
 		  param_list ')'{
-			REDUCE("func_decl -> type_specifier pointers ID '(' param_list ')'");
 			// param_list 받는 과정에서 error가 발생할 수 있다
 			// 그러므로 param_list 의 NULL 여부를 체크한다.
 			// 그리고 func_decl 에 declptr을 매기는 작업도, 여기서 해준다.
@@ -379,7 +363,7 @@ func_decl
 				{
 					if(!check_sameformals(funcdecl->formals->decl, formals->prev->decl))
 					{
-						yyerror("\nerror: conflicting types for function\n");
+						yyerror("error: conflicting types for function");
 						funcdecl->value = 0;
 						$$ = NULL;
 						clear = false;
@@ -398,29 +382,24 @@ func_decl
 
 pointers
 		: '*'{
-			REDUCE("pointers -> '*'");
 			$$ = true;
 		}
 		| /* empty */{
-			REDUCE("pointers -> epsilon");
 			$$ = false;
 		}
 		;
 
 param_list  /* list of formal parameter declaration */
 		: param_decl{
-			REDUCE("param_list -> param_decl");
 			$$ = $1;
 		}
 		| param_list ',' param_decl{
-			REDUCE("param_list -> param_list ',' param_decl");
 			$$ = $1 && $3;
 		}
 		;
 
 param_decl  /* formal parameter declaration */
 		: type_specifier pointers ID{
-			REDUCE("param_decl -> type_specifier pointers ID");
 			// ID 값으로 동일 scope에 존재하는 값인지 여부 체크
 			// 재정의하면 error
 			struct decl* declptr = findcurrentdecl($3);
@@ -430,7 +409,7 @@ param_decl  /* formal parameter declaration */
 				// ex) struct a{}; 하고 int a; 해도 문제 X
 				// 그러므로 findcurrentdecl로 반환된 declclass 까지 반환한다.
 				// 위의 내용을 findcurrentdecl 에서 수행하도록 옮겼다.
-				char errorMsg[100] = "\nerror: redeclaration of \n";
+				char errorMsg[100] = "error: redeclaration of ";
 				yyerror(strcat(errorMsg, strcat($3->name,"\n")));
 				$$ = NULL;
 			}
@@ -456,13 +435,12 @@ param_decl  /* formal parameter declaration */
 			}
 		}
 		| type_specifier pointers ID '[' const_expr ']'{
-			REDUCE("param_decl -> type_specifier pointers ID '[' const_expr ']'");
 			// ID integrity
 			struct decl* declptr = findcurrentdecl($3);
 			if(declptr)
 			{
-				char errorMsg[100] = "\nerror: redeclaration of ";
-				yyerror(strcat(errorMsg, strcat($3->name,"\n")));
+				char errorMsg[100] = "error: redeclaration of ";
+				yyerror(strcat(errorMsg, $3->name));
 				$$ = NULL;
 			}
 			else
@@ -502,10 +480,8 @@ param_decl  /* formal parameter declaration */
 
 def_list    /* list of definitions, definition can be type(struct), variable, function */
 		: def_list def{
-			REDUCE("def_list -> def_list def");
 		}
 		| /* empty */{
-			REDUCE("def_list -> epsilon");
 		}
 		;
 
@@ -522,8 +498,8 @@ def
 					// ex) struct a{}; 하고 int a; 해도 문제 X
 					// 그러므로 findcurrentdecl로 반환된 declclass 까지 반환한다.
 				// 위의 내용을 findcurrentdecl 에서 수행하도록 옮겼다.
-					char errorMsg[100] = "\nerror: redeclaration of ";
-					yyerror(strcat(errorMsg, strcat($3->name,"\n")));
+					char errorMsg[100] = "error: redeclaration of ";
+					yyerror(strcat(errorMsg, $3->name));
 				}
 				else
 				{
@@ -542,10 +518,8 @@ def
 					}
 				}
 			}
-			REDUCE("def -> type_specifier pointers ID");
 		}
 		| type_specifier pointers ID '[' const_expr ']' ';'{
-			REDUCE("def -> type_specifier pointers ID '[' const_expr ']' ';'");
 
 			if($1)
 			{
@@ -553,8 +527,8 @@ def
 				struct decl* declptr = findcurrentdecl($3);
 				if(declptr)
 				{
-					char errorMsg[100] = "\nerror: redeclaration of ";
-					yyerror(strcat(errorMsg, strcat($3->name,"\n")));
+					char errorMsg[100] = "error: redeclaration of ";
+					yyerror(strcat(errorMsg, $3->name));
 				}
 				else
 				{
@@ -588,10 +562,8 @@ def
 			}
 		}
 		| type_specifier ';'{
-			REDUCE("def -> type_specifier ';'");
 		}
 		| func_decl ';'{
-			REDUCE("def -> func_decl ';'");
 		}	
 		;
 
@@ -611,72 +583,57 @@ compound_stmt
 			}
 
 		} local_defs stmt_list '}'{
-			REDUCE("compound_stmt -> '{' local_defs stmt_list '}'");
 			pop_scope();
 		}
 		;
 
 local_defs  /* local definitions, of which scope is only inside of compound statement */
 		:	def_list{
-			REDUCE("local_defs -> def_list");
 		}
 		;
 
 stmt_list
 		: stmt_list stmt{
-			REDUCE("stmt_list -> stmt_list stmt");
 		}
 		| /* empty */{
-			REDUCE("stmt_list -> epsilon");
 		}
 		;
 
 stmt
 		: expr ';'{
-			REDUCE("stmt -> expr");
 		}
 		| compound_stmt{
-			REDUCE("stmt -> compound_stmt");
 		}
 		| RETURN ';'{
-			REDUCE("stmt -> RETURN ';'");
 			struct decl* type = findwholedecl(returnid);
 			if(type != voidtype) 
 			{
-				yyerror("\nerror: return value is not return type\n");
+				yyerror("error: return value is not return type");
 			}
 		}
 		| RETURN expr ';'{
-			REDUCE("stmt -> RETURN expr ';'");
 			struct decl* type = findwholedecl(returnid);
 			if($2)
 			{
 				if(!check_compatibletype($2->type, type))
 				{
-					yyerror("\nerror: return value is not return type\n");
+					yyerror("error: return value is not return type");
 				}	
 			}
 		}
 		| ';'{
-			REDUCE("stmt -> ';'");
 		}
 		| IF '(' expr ')' stmt{
-			REDUCE("stmt -> IF '(' expr ')' stmt");
 		}
 		| IF '(' expr ')' stmt ELSE stmt{
-			REDUCE("stmt -> IF '(' expr ')' stmt ELSE stmt");
 		}
 		| WHILE '(' expr ')' stmt{
-			REDUCE("stmt -> WHILE '(' expr ')' stmt");
 		}
 		| FOR '(' expr_e ';' expr_e ';' expr_e ')' stmt{
-			REDUCE("stmt -> FOR '(' expr_E ';' expr_e ';' expr_e ')' stmt");
 		}
 		| BREAK ';'{
-			REDUCE("stmt -> BREAK ';'");
 		}
 		| CONTINUE ';'{
-			REDUCE("stmt -> CONTINUE ';'");
 		}
 		| PRINT{
 			printste(cscope->top);
@@ -685,16 +642,13 @@ stmt
 
 expr_e
 		: expr{
-			REDUCE("expr_e -> expr");
 		}
 		| /* empty */{
-			REDUCE("expr_e -> epsilon");
 		}
 		;
 
 const_expr
 		: expr{
-			REDUCE("const_expr -> expr");
 		}
 		;
 
@@ -706,145 +660,119 @@ expr
 				if(check_compatibledecl($1, $3)) $$ = $1;
 				else
 				{
-					yyerror("\nerror: LHS and RHS are not same type\n");
+					yyerror("error: LHS and RHS are not same type");
 					$$ = NULL;
 				}
 			}
 			else
 			{
-				yyerror("\nerror: LHS is not a varaible\n");
+				yyerror("error: LHS is not a varaible");
 				$$ = NULL;
 			}
-			REDUCE("expr -> unary '=' expr");
 		}
 		| or_expr{
-			REDUCE("expr -> or_expr");
 		}
 		;
 
 or_expr
 		: or_list{
-			REDUCE("or_expr -> or_list");
 		}
 		;
 
 or_list
 		: or_list LOGICAL_OR and_expr{
-			REDUCE("or_list -> or_list LOGICAL_OR and_expr");
 			$$ = logicaltype($1, $3);
 		}
 		| and_expr{
-			REDUCE("or_list -> and_expr");
 		}
 		;
 
 and_expr
 		: and_list{
-			REDUCE("and_expr -> and_list");
 		}
 		;
 
 and_list
 		: and_list LOGICAL_AND binary{
-			REDUCE("and_list -> and_list LOGICAL_AND binary");
 			$$ = logicaltype($1, $3);
 		}
 		| binary{
-			REDUCE("and_list -> binary");
 		}
 		;
 
 binary
 		: binary RELOP binary{
-			REDUCE("binary -> binary RELOP binary");
 			$$ = optype($1, $3);
 		}
 		| binary EQUOP binary{
-			REDUCE("binary -> binary EQUOP binary");
 			$$ = optype($1, $3);
 		}
 		| binary '+' binary{
-			REDUCE("binary -> binary '+' binary");
 			$$ = plustype($1, $3);
 		}
 		| binary '-' binary{
-			REDUCE("binary -> binary '-' binary");
 			$$ = minustype($1, $3);
 		}
 		| unary %prec '='{
-			REDUCE("binary -> unary");
 		}
 		;
 
 unary
 		: '(' expr ')'{
-			REDUCE("unary -> '(' expr ')'");
 			$$ = $2;
 		}
 		| '(' unary ')'{
-			REDUCE("unary -> '(' unary ')'");
 			$$ = $2;
 		} 
 		| INTEGER_CONST{
-			REDUCE("unary -> INTEGER_CONST");
 			$$ = makenumconstdecl(inttype, $1);
 		}
 		| CHAR_CONST{
-			REDUCE("unary -> CHAR_CONST");
 			$$ = makecharconstdecl(chartype, $1);
 		}
 		| STRING{
-			REDUCE("unary -> STRING");
 			$$ = makestringconstdecl(stringtype, $1);
 		}
 		| ID{
-			REDUCE("unary -> ID");
 
 			// ID에 대응되는 decl이 없다면, findcurrentdecl은 NULL을 리턴
 			
 			struct decl* declptr = findwholedecl($1);
 
-			if(!declptr) yyerror("\nerror: not declared\n");
+			if(!declptr) yyerror("error: not declared");
 
 			$$ = declptr;
 		}
 		| '-' unary	%prec '!'{
-			REDUCE("unary -> '-' unary");
 			// $2 는 integer여야 한다
 			if($2->type==inttype) $$ = $2;
 			else
 			{
-				yyerror("\nerror: not int type\n");
+				yyerror("error: not int type");
 				$$ = NULL;
 			}
 		}
 		| '!' unary{
-			REDUCE("unary -> '!' unary");
 			if($2->type==inttype) $$ = $2;
 			else
 			{
-				yyerror("\nerror: not int type\n");
+				yyerror("error: not int type");
 				$$ = NULL;
 			}
 		}
 		| unary INCOP{
-			REDUCE("unary -> unary INCOP");
-			if(!($$=checkINCOPDECOP($1))) yyerror("\nerror: not char,int,ptr\n");
+			if(!($$=checkINCOPDECOP($1))) yyerror("error: not char,int,ptr");
 		}
 		| unary DECOP{
-			REDUCE("unary -> unary DECOP");
-			if(!($$=checkINCOPDECOP($1))) yyerror("\nerror: not char,int,ptr\n");
+			if(!($$=checkINCOPDECOP($1))) yyerror("error: not char,int,ptr");
 		}
 		| INCOP unary{
-			REDUCE("unary -> INCOP unary");
-			if(!($$=checkINCOPDECOP($2))) yyerror("\nerror: not char,int,ptr\n");
+			if(!($$=checkINCOPDECOP($2))) yyerror("error: not char,int,ptr");
 		}
 		| DECOP unary{
-			REDUCE("unary -> DECCOP unary");
-			if(!($$=checkINCOPDECOP($2))) yyerror("\nerror: not char,int,ptr\n");
+			if(!($$=checkINCOPDECOP($2))) yyerror("error: not char,int,ptr");
 		}
 		| '&' unary	%prec '!'{
-			REDUCE("unary -> '&' unary");
 			if(check_is_var($2))
 			{
 				$$ = makeconstdecl(makeptrdecl($2));
@@ -855,7 +783,6 @@ unary
 			}
 		}
 		| '*' unary	%prec '!'{
-			REDUCE("unary -> '*' unary");
 			if(check_is_var($2))
 			{
 				if($2->type->typeclass==PTR) $$ = $2->type->ptrto;
@@ -864,7 +791,6 @@ unary
 
 		}
 		| unary '[' expr ']'{
-			REDUCE("unary -> unary '[' expr ']'");
 			// RHS의 unary는 const 이고, type의 typeclass는 array 인가?
 			// expr는 int type VAR 이거나, INT_CONST 인가?
 			// 조건을 충족한다면, elementvar로 VAR을 넘겨준다.
@@ -872,34 +798,28 @@ unary
 			$$ = arrayaccess($1, $3);
 		}
 		| unary '.' ID{
-			REDUCE("unary -> unary '.' ID");
 			$$ = structaccess($1, $3);
 		}
 		| unary STRUCTOP ID{
-			REDUCE("unary -> unary STRUCTOP ID");
 			$$ = structptraccess($1, $3);
 		}
 		| unary '(' args ')'{
-			REDUCE("unary -> unary '(' args ')'");
 			$$ = check_funccall($1, $3);
 
 		}
 		| unary '(' ')'{
-			REDUCE("unary -> unary '(' ')'");
 			$$ = check_funccall($1, NULL);
 		}
 		;
 
 args    /* actual parameters(function arguments) transferred to function */
 		: expr{
-			REDUCE("args -> expr");
 			if($1)
 			{
 				$$ = copydecl($1);
 			}
 		}
 		| expr ',' args{
-			REDUCE("args -> args ',' expr");
 			if($1 && $3) 
 			{
 				$1->next = $3;
@@ -916,7 +836,9 @@ args    /* actual parameters(function arguments) transferred to function */
 
 int yyerror (char* s)
 {
-	fprintf (stderr, "%s\n", s);
+	if(filename) fprintf(stderr, "%s:",filename);
+	fprintf(stderr,"%d: ",read_line());
+	fprintf(stderr, "%s\n", s);
 }
 
 void REDUCE(char* s)
@@ -1571,7 +1493,7 @@ struct decl* check_funccall(struct decl* funcdecl, struct decl* args)
 	if(!funcdecl) return NULL;
 	else if(funcdecl->declclass != FUNC)
 	{
-		yyerror("\nerror: not a function\n");
+		yyerror("error: not a function");
 		return NULL;
 	}
 	else if(!funcdecl->formals)
@@ -1579,13 +1501,13 @@ struct decl* check_funccall(struct decl* funcdecl, struct decl* args)
 		if(!args) return makeconstdecl(funcdecl->returntype);
 		else
 		{
-			yyerror("\nerror: actual args are not equal to formals args\n");
+			yyerror("error: actual args are not equal to formals args");
 			return NULL;
 		}
 	}
 	else if(!check_sameformals(funcdecl->formals->decl, args))
 	{
-		yyerror("\nerror: actual args are not equal to formals args\n");
+		yyerror("error: actual args are not equal to formals args");
 		return NULL;
 	}
 	else
@@ -1606,11 +1528,11 @@ struct decl* arrayaccess(struct decl* arrayptr, struct decl* indexptr)
 	if(check_is_array(arrayptr))
 	{
 		if(indexptr->type == inttype) result = arrayptr->type->elementvar;
-		else yyerror("\nerror: not a int type index\n");
+		else yyerror("error: not a int type index");
 	}
 	else
 	{
-		yyerror("\nerror: not array type\n");
+		yyerror("error: not array type");
 	}
 }
 
@@ -1626,9 +1548,9 @@ struct decl* structaccess(struct decl* structptr, struct id* fieldid)
 			else entry = entry->prev;
 		}
 		if(entry) result = entry->decl;
-		else yyerror("\nstruct do not have same field\n");
+		else yyerror("struct do not have same field");
 	}
-	else yyerror("\nerror: variable is not struct\n");
+	else yyerror("error: variable is not struct");
 
 	return result;
 }
@@ -1642,7 +1564,7 @@ struct decl* structptraccess(struct decl* structptr, struct id* fieldid)
 		{
 			result = structaccess(structptr->type->ptrto, fieldid);
 		}
-		else yyerror("\nerror: variable is not struct pointer\n");
+		else yyerror("error: variable is not struct pointer");
 	}
 
 	return result;
@@ -1705,7 +1627,7 @@ struct decl* minustype(struct decl* op1, struct decl* op2)
 		else isError = true;
 	}
 
-	if(isError) yyerror("\nerror: not computable\n");
+	if(isError) yyerror("error: not computable");
 
 	return result;
 }
@@ -1727,7 +1649,7 @@ struct decl* optype(struct decl* op1, struct decl* op2)
 
 	if(isError)
 	{
-		yyerror("\nerror: not computable\n");
+		yyerror("error: not computable");
 		return NULL;
 	}
 	else return makenumconstdecl(inttype, 1);
@@ -1752,7 +1674,7 @@ struct decl* logicaltype(struct decl* op1, struct decl* op2)
 		result = NULL;
 	}
 
-	if(isError) yyerror("\nerror: not int type\n");
+	if(isError) yyerror("error: not int type");
 
 	return result;
 }

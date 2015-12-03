@@ -471,15 +471,15 @@ static const yytype_uint8 yytranslate[] =
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_uint16 yyrline[] =
 {
-       0,    57,    57,    63,    66,    72,   103,   144,   154,   157,
-     164,   170,   174,   181,   180,   196,   211,   259,   307,   307,
-     400,   404,   411,   415,   422,   458,   504,   507,   513,   547,
-     590,   593,   599,   599,   620,   626,   629,   635,   638,   641,
-     649,   660,   663,   666,   669,   672,   675,   678,   681,   687,
-     690,   696,   702,   720,   726,   732,   736,   742,   748,   752,
-     758,   762,   766,   770,   774,   780,   784,   788,   792,   796,
-     800,   811,   821,   830,   834,   838,   842,   846,   857,   866,
-     874,   878,   882,   887,   894,   901
+       0,    57,    57,    62,    64,    69,    99,   139,   148,   150,
+     156,   161,   164,   170,   169,   184,   198,   245,   292,   292,
+     384,   387,   393,   396,   402,   437,   482,   484,   489,   522,
+     564,   566,   571,   571,   591,   596,   598,   603,   605,   607,
+     614,   624,   626,   628,   630,   632,   634,   636,   638,   644,
+     646,   651,   656,   673,   678,   683,   686,   691,   696,   699,
+     704,   707,   710,   713,   716,   721,   724,   727,   730,   733,
+     736,   746,   755,   763,   766,   769,   772,   775,   785,   793,
+     800,   803,   806,   810,   816,   822
 };
 #endif
 
@@ -1367,31 +1367,27 @@ yyreduce:
         case 2:
 #line 57 "subc.y" /* yacc.c:1646  */
     {
-			REDUCE("program -> ext_def_list");
 		}
-#line 1373 "subc.tab.c" /* yacc.c:1646  */
+#line 1372 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 3:
-#line 63 "subc.y" /* yacc.c:1646  */
+#line 62 "subc.y" /* yacc.c:1646  */
     {
-			REDUCE("ext_def_list -> ext_def_list ext_def");
 		}
-#line 1381 "subc.tab.c" /* yacc.c:1646  */
+#line 1379 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 4:
-#line 66 "subc.y" /* yacc.c:1646  */
+#line 64 "subc.y" /* yacc.c:1646  */
     {
-			REDUCE("ext_def_list -> epsilon");
 		}
-#line 1389 "subc.tab.c" /* yacc.c:1646  */
+#line 1386 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 5:
-#line 72 "subc.y" /* yacc.c:1646  */
+#line 69 "subc.y" /* yacc.c:1646  */
     {
-			REDUCE("ext_def -> type_specifier pointers ID ';'");
 			// ID 값으로 동일 scope에 존재하는 값인지 여부 체크
 			// 재정의하면 error
 			struct decl* declptr = findcurrentdecl((yyvsp[-1].idptr));
@@ -1401,8 +1397,8 @@ yyreduce:
 				// ex) struct a{}; 하고 int a; 해도 문제 X
 				// 그러므로 findcurrentdecl로 반환된 declclass 까지 반환한다.
 				// 위의 내용을 findcurrentdecl 에서 수행하도록 옮겼다.
-				char errorMsg[100] = "\nerror: redeclaration of ";
-				yyerror(strcat(errorMsg, strcat((yyvsp[-1].idptr)->name,"\n")));
+				char errorMsg[100] = "error: redeclaration of ";
+				yyerror(strcat(errorMsg, (yyvsp[-1].idptr)->name));
 			}
 			else
 			{
@@ -1421,20 +1417,19 @@ yyreduce:
 				}
 			}
 		}
-#line 1425 "subc.tab.c" /* yacc.c:1646  */
+#line 1421 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 6:
-#line 103 "subc.y" /* yacc.c:1646  */
+#line 99 "subc.y" /* yacc.c:1646  */
     {
-			REDUCE("ext_def -> type_specifier pointers ID '[' const_expr ']' ';'");
 
 			// ID integrity
 			struct decl* declptr = findcurrentdecl((yyvsp[-4].idptr));
 			if(declptr)
 			{
-				char errorMsg[100] = "\nerror: redeclaration of ";
-				yyerror(strcat(errorMsg, strcat((yyvsp[-4].idptr)->name,"\n")));
+				char errorMsg[100] = "error: redeclaration of ";
+				yyerror(strcat(errorMsg, (yyvsp[-4].idptr)->name));
 			}
 			else
 			{
@@ -1467,114 +1462,105 @@ yyreduce:
 				}
 			}
 		}
-#line 1471 "subc.tab.c" /* yacc.c:1646  */
+#line 1466 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 7:
-#line 144 "subc.y" /* yacc.c:1646  */
+#line 139 "subc.y" /* yacc.c:1646  */
     {
-			REDUCE("ext_def -> func_decl ';'");
 			if((yyvsp[-1].declptr))
 			{
 				if((yyvsp[-1].declptr)->value == 1)
 				{
-					yyerror("\nerror: function redeclaration\n");
+					yyerror("error: function redeclaration");
 				}
 			}
 		}
-#line 1486 "subc.tab.c" /* yacc.c:1646  */
+#line 1480 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 8:
-#line 154 "subc.y" /* yacc.c:1646  */
+#line 148 "subc.y" /* yacc.c:1646  */
     {
-			REDUCE("ext_def -> type_specifier ';'");
 		}
-#line 1494 "subc.tab.c" /* yacc.c:1646  */
+#line 1487 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 9:
-#line 157 "subc.y" /* yacc.c:1646  */
+#line 150 "subc.y" /* yacc.c:1646  */
     {
 			if((yyvsp[-1].declptr)) (yyvsp[-1].declptr)->value = 2;
-			REDUCE("ext_def -> func_decl compound_stmt");
 		}
-#line 1503 "subc.tab.c" /* yacc.c:1646  */
+#line 1495 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 10:
-#line 164 "subc.y" /* yacc.c:1646  */
+#line 156 "subc.y" /* yacc.c:1646  */
     {
-			REDUCE("type_specifier -> TYPE");
 			if(!strcmp((yyvsp[0].idptr)->name,"int")) (yyval.declptr) = inttype;
 			else if(!strcmp((yyvsp[0].idptr)->name,"char")) (yyval.declptr) = chartype;
 			else (yyval.declptr) = NULL;
 		}
-#line 1514 "subc.tab.c" /* yacc.c:1646  */
+#line 1505 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 11:
-#line 170 "subc.y" /* yacc.c:1646  */
+#line 161 "subc.y" /* yacc.c:1646  */
     {
-			REDUCE("type_specifier -> VOID");
 			(yyval.declptr) = voidtype;
 		}
-#line 1523 "subc.tab.c" /* yacc.c:1646  */
+#line 1513 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 12:
-#line 174 "subc.y" /* yacc.c:1646  */
+#line 164 "subc.y" /* yacc.c:1646  */
     {
-			REDUCE("type_specifier -> struct_specifier");
 		}
-#line 1531 "subc.tab.c" /* yacc.c:1646  */
+#line 1520 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 13:
-#line 181 "subc.y" /* yacc.c:1646  */
+#line 170 "subc.y" /* yacc.c:1646  */
     {
 				push_scope();	
 			}
-#line 1539 "subc.tab.c" /* yacc.c:1646  */
+#line 1528 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 14:
-#line 185 "subc.y" /* yacc.c:1646  */
+#line 174 "subc.y" /* yacc.c:1646  */
     {
 				struct ste* fields = pop_scope();
 				if(findstructdecl((yyvsp[-4].idptr)))
 				{
-					yyerror("\nerror: redeclaration\n");
+					yyerror("error: redeclaration");
 					(yyval.declptr) = NULL;
 				}
 				else declare((yyvsp[-4].idptr), (yyval.declptr)=makestructdecl(fields));
-				REDUCE("struct_specifier -> STRUCT ID '{' def_list '}'");
 				// 새로운 struct type을 생성함
 			}
-#line 1555 "subc.tab.c" /* yacc.c:1646  */
+#line 1543 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 15:
-#line 196 "subc.y" /* yacc.c:1646  */
+#line 184 "subc.y" /* yacc.c:1646  */
     {
-//			REDUCE("struct_specifier -> STRUCT ID");
 			// ID로 미리 정의되어있는 struct type 인지 확인한다.
 			struct decl* structdecl = findstructdecl((yyvsp[0].idptr));
 			(yyval.declptr) = NULL;
 			if(structdecl) (yyval.declptr) = structdecl;
 			else
 			{
-				yyerror("\nerror: incomplete type error\n");
+				yyerror("error: incomplete type error");
 			}
 
 		}
-#line 1572 "subc.tab.c" /* yacc.c:1646  */
+#line 1559 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 16:
-#line 211 "subc.y" /* yacc.c:1646  */
+#line 198 "subc.y" /* yacc.c:1646  */
     {
-			REDUCE("func_decl -> type_specifier pointers ID '(' ')'");
 			
 			// 존재하는 func 이름인지 확인
 			struct decl* funcdecl = findfuncdecl((yyvsp[-2].idptr));
@@ -1585,12 +1571,12 @@ yyreduce:
 				{
 					if(funcdecl->formals)
 					{
-						yyerror("\nerror: conflicting types for function\n");
+						yyerror("error: conflicting types for function");
 						(yyval.declptr) = NULL;
 					}
 					else if(funcdecl->value == 2)
 					{
-						yyerror("\nerror: function redeclaration\n");
+						yyerror("error: function redeclaration");
 						(yyval.declptr) = NULL;
 					}
 					else
@@ -1601,7 +1587,7 @@ yyreduce:
 				}
 				else
 				{
-					yyerror("\nerror: conflicting types for function\n");
+					yyerror("error: conflicting types for function");
 					(yyval.declptr) = NULL;
 				}
 			}
@@ -1621,13 +1607,12 @@ yyreduce:
 				}
 			}			
 		}
-#line 1625 "subc.tab.c" /* yacc.c:1646  */
+#line 1611 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 17:
-#line 259 "subc.y" /* yacc.c:1646  */
+#line 245 "subc.y" /* yacc.c:1646  */
     {
-			REDUCE("func_decl -> type_specifier pointers ID '(' VOID ')'");
 
 			// 존재하는 func 이름인지 확인
 			struct decl* funcdecl = findfuncdecl((yyvsp[-3].idptr));
@@ -1638,12 +1623,12 @@ yyreduce:
 				{
 					if(funcdecl->formals)
 					{
-						yyerror("\nerror: conflicting types for function\n");
+						yyerror("error: conflicting types for function");
 						(yyval.declptr) = NULL;
 					}
 					else if(funcdecl->value == 2)
 					{
-						yyerror("\nerror: function redeclaration\n");
+						yyerror("error: function redeclaration");
 						(yyval.declptr) = NULL;
 					}
 					else
@@ -1654,7 +1639,7 @@ yyreduce:
 				}
 				else
 				{
-					yyerror("\nerror: conflicting types for function\n");
+					yyerror("error: conflicting types for function");
 					(yyval.declptr) = NULL;
 				}
 			}
@@ -1674,11 +1659,11 @@ yyreduce:
 				}
 			}
 		}
-#line 1678 "subc.tab.c" /* yacc.c:1646  */
+#line 1663 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 18:
-#line 307 "subc.y" /* yacc.c:1646  */
+#line 292 "subc.y" /* yacc.c:1646  */
     {
 			// FUNC declare 는 param_list 를 확인한 뒤로 미룬다
 			struct decl* funcdecl = findfuncdecl((yyvsp[-1].idptr));
@@ -1689,7 +1674,7 @@ yyreduce:
 				{
 					if(funcdecl->value == 2)
 					{
-						yyerror("\nerror: function redeclaration\n");
+						yyerror("error: function redeclaration");
 						(yyval.declptr) = NULL;
 					}
 					else
@@ -1700,7 +1685,7 @@ yyreduce:
 				}
 				else
 				{
-					yyerror("\nerror: conflicting types for function\n");
+					yyerror("error: conflicting types for function");
 					(yyval.declptr) = NULL;
 				}
 				push_scope();
@@ -1723,13 +1708,12 @@ yyreduce:
 				declare(returnid,returntypedecl);
 			}
 		}
-#line 1727 "subc.tab.c" /* yacc.c:1646  */
+#line 1712 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 19:
-#line 351 "subc.y" /* yacc.c:1646  */
+#line 336 "subc.y" /* yacc.c:1646  */
     {
-			REDUCE("func_decl -> type_specifier pointers ID '(' param_list ')'");
 			// param_list 받는 과정에서 error가 발생할 수 있다
 			// 그러므로 param_list 의 NULL 여부를 체크한다.
 			// 그리고 func_decl 에 declptr을 매기는 작업도, 여기서 해준다.
@@ -1759,7 +1743,7 @@ yyreduce:
 				{
 					if(!check_sameformals(funcdecl->formals->decl, formals->prev->decl))
 					{
-						yyerror("\nerror: conflicting types for function\n");
+						yyerror("error: conflicting types for function");
 						funcdecl->value = 0;
 						(yyval.declptr) = NULL;
 						clear = false;
@@ -1774,49 +1758,44 @@ yyreduce:
 				declare((yyvsp[-4].idptr), funcdecl);
 			}
 		}
-#line 1778 "subc.tab.c" /* yacc.c:1646  */
+#line 1762 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 20:
-#line 400 "subc.y" /* yacc.c:1646  */
+#line 384 "subc.y" /* yacc.c:1646  */
     {
-			REDUCE("pointers -> '*'");
 			(yyval.boolval) = true;
 		}
-#line 1787 "subc.tab.c" /* yacc.c:1646  */
+#line 1770 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 21:
-#line 404 "subc.y" /* yacc.c:1646  */
+#line 387 "subc.y" /* yacc.c:1646  */
     {
-			REDUCE("pointers -> epsilon");
 			(yyval.boolval) = false;
 		}
-#line 1796 "subc.tab.c" /* yacc.c:1646  */
+#line 1778 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 22:
-#line 411 "subc.y" /* yacc.c:1646  */
+#line 393 "subc.y" /* yacc.c:1646  */
     {
-			REDUCE("param_list -> param_decl");
 			(yyval.boolval) = (yyvsp[0].declptr);
 		}
-#line 1805 "subc.tab.c" /* yacc.c:1646  */
+#line 1786 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 23:
-#line 415 "subc.y" /* yacc.c:1646  */
+#line 396 "subc.y" /* yacc.c:1646  */
     {
-			REDUCE("param_list -> param_list ',' param_decl");
 			(yyval.boolval) = (yyvsp[-2].boolval) && (yyvsp[0].declptr);
 		}
-#line 1814 "subc.tab.c" /* yacc.c:1646  */
+#line 1794 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 24:
-#line 422 "subc.y" /* yacc.c:1646  */
+#line 402 "subc.y" /* yacc.c:1646  */
     {
-			REDUCE("param_decl -> type_specifier pointers ID");
 			// ID 값으로 동일 scope에 존재하는 값인지 여부 체크
 			// 재정의하면 error
 			struct decl* declptr = findcurrentdecl((yyvsp[0].idptr));
@@ -1826,7 +1805,7 @@ yyreduce:
 				// ex) struct a{}; 하고 int a; 해도 문제 X
 				// 그러므로 findcurrentdecl로 반환된 declclass 까지 반환한다.
 				// 위의 내용을 findcurrentdecl 에서 수행하도록 옮겼다.
-				char errorMsg[100] = "\nerror: redeclaration of \n";
+				char errorMsg[100] = "error: redeclaration of ";
 				yyerror(strcat(errorMsg, strcat((yyvsp[0].idptr)->name,"\n")));
 				(yyval.declptr) = NULL;
 			}
@@ -1851,19 +1830,18 @@ yyreduce:
 				}
 			}
 		}
-#line 1855 "subc.tab.c" /* yacc.c:1646  */
+#line 1834 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 25:
-#line 458 "subc.y" /* yacc.c:1646  */
+#line 437 "subc.y" /* yacc.c:1646  */
     {
-			REDUCE("param_decl -> type_specifier pointers ID '[' const_expr ']'");
 			// ID integrity
 			struct decl* declptr = findcurrentdecl((yyvsp[-3].idptr));
 			if(declptr)
 			{
-				char errorMsg[100] = "\nerror: redeclaration of ";
-				yyerror(strcat(errorMsg, strcat((yyvsp[-3].idptr)->name,"\n")));
+				char errorMsg[100] = "error: redeclaration of ";
+				yyerror(strcat(errorMsg, (yyvsp[-3].idptr)->name));
 				(yyval.declptr) = NULL;
 			}
 			else
@@ -1899,27 +1877,25 @@ yyreduce:
 				}
 			}
 		}
-#line 1903 "subc.tab.c" /* yacc.c:1646  */
+#line 1881 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 26:
-#line 504 "subc.y" /* yacc.c:1646  */
+#line 482 "subc.y" /* yacc.c:1646  */
     {
-			REDUCE("def_list -> def_list def");
 		}
-#line 1911 "subc.tab.c" /* yacc.c:1646  */
+#line 1888 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 27:
-#line 507 "subc.y" /* yacc.c:1646  */
+#line 484 "subc.y" /* yacc.c:1646  */
     {
-			REDUCE("def_list -> epsilon");
 		}
-#line 1919 "subc.tab.c" /* yacc.c:1646  */
+#line 1895 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 28:
-#line 513 "subc.y" /* yacc.c:1646  */
+#line 489 "subc.y" /* yacc.c:1646  */
     {
 			// ID 값으로 동일 scope에 존재하는 값인지 여부 체크
 			// 재정의하면 error
@@ -1932,8 +1908,8 @@ yyreduce:
 					// ex) struct a{}; 하고 int a; 해도 문제 X
 					// 그러므로 findcurrentdecl로 반환된 declclass 까지 반환한다.
 				// 위의 내용을 findcurrentdecl 에서 수행하도록 옮겼다.
-					char errorMsg[100] = "\nerror: redeclaration of ";
-					yyerror(strcat(errorMsg, strcat((yyvsp[-1].idptr)->name,"\n")));
+					char errorMsg[100] = "error: redeclaration of ";
+					yyerror(strcat(errorMsg, (yyvsp[-1].idptr)->name));
 				}
 				else
 				{
@@ -1952,15 +1928,13 @@ yyreduce:
 					}
 				}
 			}
-			REDUCE("def -> type_specifier pointers ID");
 		}
-#line 1958 "subc.tab.c" /* yacc.c:1646  */
+#line 1933 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 29:
-#line 547 "subc.y" /* yacc.c:1646  */
+#line 522 "subc.y" /* yacc.c:1646  */
     {
-			REDUCE("def -> type_specifier pointers ID '[' const_expr ']' ';'");
 
 			if((yyvsp[-6].declptr))
 			{
@@ -1968,8 +1942,8 @@ yyreduce:
 				struct decl* declptr = findcurrentdecl((yyvsp[-4].idptr));
 				if(declptr)
 				{
-					char errorMsg[100] = "\nerror: redeclaration of ";
-					yyerror(strcat(errorMsg, strcat((yyvsp[-4].idptr)->name,"\n")));
+					char errorMsg[100] = "error: redeclaration of ";
+					yyerror(strcat(errorMsg, (yyvsp[-4].idptr)->name));
 				}
 				else
 				{
@@ -2002,27 +1976,25 @@ yyreduce:
 				}
 			}
 		}
-#line 2006 "subc.tab.c" /* yacc.c:1646  */
+#line 1980 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 30:
-#line 590 "subc.y" /* yacc.c:1646  */
+#line 564 "subc.y" /* yacc.c:1646  */
     {
-			REDUCE("def -> type_specifier ';'");
 		}
-#line 2014 "subc.tab.c" /* yacc.c:1646  */
+#line 1987 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 31:
-#line 593 "subc.y" /* yacc.c:1646  */
+#line 566 "subc.y" /* yacc.c:1646  */
     {
-			REDUCE("def -> func_decl ';'");
 		}
-#line 2022 "subc.tab.c" /* yacc.c:1646  */
+#line 1994 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 32:
-#line 599 "subc.y" /* yacc.c:1646  */
+#line 571 "subc.y" /* yacc.c:1646  */
     {
 			push_scope();
 			if(!findcurrentdecl(returnid))
@@ -2038,177 +2010,159 @@ yyreduce:
 			}
 
 		}
-#line 2042 "subc.tab.c" /* yacc.c:1646  */
+#line 2014 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 33:
-#line 613 "subc.y" /* yacc.c:1646  */
+#line 585 "subc.y" /* yacc.c:1646  */
     {
-			REDUCE("compound_stmt -> '{' local_defs stmt_list '}'");
 			pop_scope();
 		}
-#line 2051 "subc.tab.c" /* yacc.c:1646  */
+#line 2022 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 34:
-#line 620 "subc.y" /* yacc.c:1646  */
+#line 591 "subc.y" /* yacc.c:1646  */
     {
-			REDUCE("local_defs -> def_list");
 		}
-#line 2059 "subc.tab.c" /* yacc.c:1646  */
+#line 2029 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 35:
-#line 626 "subc.y" /* yacc.c:1646  */
+#line 596 "subc.y" /* yacc.c:1646  */
     {
-			REDUCE("stmt_list -> stmt_list stmt");
 		}
-#line 2067 "subc.tab.c" /* yacc.c:1646  */
+#line 2036 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 36:
-#line 629 "subc.y" /* yacc.c:1646  */
+#line 598 "subc.y" /* yacc.c:1646  */
     {
-			REDUCE("stmt_list -> epsilon");
 		}
-#line 2075 "subc.tab.c" /* yacc.c:1646  */
+#line 2043 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 37:
-#line 635 "subc.y" /* yacc.c:1646  */
+#line 603 "subc.y" /* yacc.c:1646  */
     {
-			REDUCE("stmt -> expr");
 		}
-#line 2083 "subc.tab.c" /* yacc.c:1646  */
+#line 2050 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 38:
-#line 638 "subc.y" /* yacc.c:1646  */
+#line 605 "subc.y" /* yacc.c:1646  */
     {
-			REDUCE("stmt -> compound_stmt");
 		}
-#line 2091 "subc.tab.c" /* yacc.c:1646  */
+#line 2057 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 39:
-#line 641 "subc.y" /* yacc.c:1646  */
+#line 607 "subc.y" /* yacc.c:1646  */
     {
-			REDUCE("stmt -> RETURN ';'");
 			struct decl* type = findwholedecl(returnid);
 			if(type != voidtype) 
 			{
-				yyerror("\nerror: return value is not return type\n");
+				yyerror("error: return value is not return type");
 			}
 		}
-#line 2104 "subc.tab.c" /* yacc.c:1646  */
+#line 2069 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 40:
-#line 649 "subc.y" /* yacc.c:1646  */
+#line 614 "subc.y" /* yacc.c:1646  */
     {
-			REDUCE("stmt -> RETURN expr ';'");
 			struct decl* type = findwholedecl(returnid);
 			if((yyvsp[-1].declptr))
 			{
 				if(!check_compatibletype((yyvsp[-1].declptr)->type, type))
 				{
-					yyerror("\nerror: return value is not return type\n");
+					yyerror("error: return value is not return type");
 				}	
 			}
 		}
-#line 2120 "subc.tab.c" /* yacc.c:1646  */
+#line 2084 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 41:
-#line 660 "subc.y" /* yacc.c:1646  */
+#line 624 "subc.y" /* yacc.c:1646  */
     {
-			REDUCE("stmt -> ';'");
 		}
-#line 2128 "subc.tab.c" /* yacc.c:1646  */
+#line 2091 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 42:
-#line 663 "subc.y" /* yacc.c:1646  */
+#line 626 "subc.y" /* yacc.c:1646  */
     {
-			REDUCE("stmt -> IF '(' expr ')' stmt");
 		}
-#line 2136 "subc.tab.c" /* yacc.c:1646  */
+#line 2098 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 43:
-#line 666 "subc.y" /* yacc.c:1646  */
+#line 628 "subc.y" /* yacc.c:1646  */
     {
-			REDUCE("stmt -> IF '(' expr ')' stmt ELSE stmt");
 		}
-#line 2144 "subc.tab.c" /* yacc.c:1646  */
+#line 2105 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 44:
-#line 669 "subc.y" /* yacc.c:1646  */
+#line 630 "subc.y" /* yacc.c:1646  */
     {
-			REDUCE("stmt -> WHILE '(' expr ')' stmt");
 		}
-#line 2152 "subc.tab.c" /* yacc.c:1646  */
+#line 2112 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 45:
-#line 672 "subc.y" /* yacc.c:1646  */
+#line 632 "subc.y" /* yacc.c:1646  */
     {
-			REDUCE("stmt -> FOR '(' expr_E ';' expr_e ';' expr_e ')' stmt");
 		}
-#line 2160 "subc.tab.c" /* yacc.c:1646  */
+#line 2119 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 46:
-#line 675 "subc.y" /* yacc.c:1646  */
+#line 634 "subc.y" /* yacc.c:1646  */
     {
-			REDUCE("stmt -> BREAK ';'");
 		}
-#line 2168 "subc.tab.c" /* yacc.c:1646  */
+#line 2126 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 47:
-#line 678 "subc.y" /* yacc.c:1646  */
+#line 636 "subc.y" /* yacc.c:1646  */
     {
-			REDUCE("stmt -> CONTINUE ';'");
 		}
-#line 2176 "subc.tab.c" /* yacc.c:1646  */
+#line 2133 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 48:
-#line 681 "subc.y" /* yacc.c:1646  */
+#line 638 "subc.y" /* yacc.c:1646  */
     {
 			printste(cscope->top);
 		}
-#line 2184 "subc.tab.c" /* yacc.c:1646  */
+#line 2141 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 49:
-#line 687 "subc.y" /* yacc.c:1646  */
+#line 644 "subc.y" /* yacc.c:1646  */
     {
-			REDUCE("expr_e -> expr");
 		}
-#line 2192 "subc.tab.c" /* yacc.c:1646  */
+#line 2148 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 50:
-#line 690 "subc.y" /* yacc.c:1646  */
+#line 646 "subc.y" /* yacc.c:1646  */
     {
-			REDUCE("expr_e -> epsilon");
 		}
-#line 2200 "subc.tab.c" /* yacc.c:1646  */
+#line 2155 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 51:
-#line 696 "subc.y" /* yacc.c:1646  */
+#line 651 "subc.y" /* yacc.c:1646  */
     {
-			REDUCE("const_expr -> expr");
 		}
-#line 2208 "subc.tab.c" /* yacc.c:1646  */
+#line 2162 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 52:
-#line 702 "subc.y" /* yacc.c:1646  */
+#line 656 "subc.y" /* yacc.c:1646  */
     {
 			bool result = false;
 			if(check_is_var((yyvsp[-2].declptr)))
@@ -2216,252 +2170,226 @@ yyreduce:
 				if(check_compatibledecl((yyvsp[-2].declptr), (yyvsp[0].declptr))) (yyval.declptr) = (yyvsp[-2].declptr);
 				else
 				{
-					yyerror("\nerror: LHS and RHS are not same type\n");
+					yyerror("error: LHS and RHS are not same type");
 					(yyval.declptr) = NULL;
 				}
 			}
 			else
 			{
-				yyerror("\nerror: LHS is not a varaible\n");
+				yyerror("error: LHS is not a varaible");
 				(yyval.declptr) = NULL;
 			}
-			REDUCE("expr -> unary '=' expr");
 		}
-#line 2231 "subc.tab.c" /* yacc.c:1646  */
+#line 2184 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 53:
-#line 720 "subc.y" /* yacc.c:1646  */
+#line 673 "subc.y" /* yacc.c:1646  */
     {
-			REDUCE("expr -> or_expr");
 		}
-#line 2239 "subc.tab.c" /* yacc.c:1646  */
+#line 2191 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 54:
-#line 726 "subc.y" /* yacc.c:1646  */
+#line 678 "subc.y" /* yacc.c:1646  */
     {
-			REDUCE("or_expr -> or_list");
 		}
-#line 2247 "subc.tab.c" /* yacc.c:1646  */
+#line 2198 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 55:
-#line 732 "subc.y" /* yacc.c:1646  */
+#line 683 "subc.y" /* yacc.c:1646  */
     {
-			REDUCE("or_list -> or_list LOGICAL_OR and_expr");
 			(yyval.declptr) = logicaltype((yyvsp[-2].declptr), (yyvsp[0].declptr));
 		}
-#line 2256 "subc.tab.c" /* yacc.c:1646  */
+#line 2206 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 56:
-#line 736 "subc.y" /* yacc.c:1646  */
+#line 686 "subc.y" /* yacc.c:1646  */
     {
-			REDUCE("or_list -> and_expr");
 		}
-#line 2264 "subc.tab.c" /* yacc.c:1646  */
+#line 2213 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 57:
-#line 742 "subc.y" /* yacc.c:1646  */
+#line 691 "subc.y" /* yacc.c:1646  */
     {
-			REDUCE("and_expr -> and_list");
 		}
-#line 2272 "subc.tab.c" /* yacc.c:1646  */
+#line 2220 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 58:
-#line 748 "subc.y" /* yacc.c:1646  */
+#line 696 "subc.y" /* yacc.c:1646  */
     {
-			REDUCE("and_list -> and_list LOGICAL_AND binary");
 			(yyval.declptr) = logicaltype((yyvsp[-2].declptr), (yyvsp[0].declptr));
 		}
-#line 2281 "subc.tab.c" /* yacc.c:1646  */
+#line 2228 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 59:
-#line 752 "subc.y" /* yacc.c:1646  */
+#line 699 "subc.y" /* yacc.c:1646  */
     {
-			REDUCE("and_list -> binary");
 		}
-#line 2289 "subc.tab.c" /* yacc.c:1646  */
+#line 2235 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 60:
-#line 758 "subc.y" /* yacc.c:1646  */
+#line 704 "subc.y" /* yacc.c:1646  */
     {
-			REDUCE("binary -> binary RELOP binary");
 			(yyval.declptr) = optype((yyvsp[-2].declptr), (yyvsp[0].declptr));
+		}
+#line 2243 "subc.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 61:
+#line 707 "subc.y" /* yacc.c:1646  */
+    {
+			(yyval.declptr) = optype((yyvsp[-2].declptr), (yyvsp[0].declptr));
+		}
+#line 2251 "subc.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 62:
+#line 710 "subc.y" /* yacc.c:1646  */
+    {
+			(yyval.declptr) = plustype((yyvsp[-2].declptr), (yyvsp[0].declptr));
+		}
+#line 2259 "subc.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 63:
+#line 713 "subc.y" /* yacc.c:1646  */
+    {
+			(yyval.declptr) = minustype((yyvsp[-2].declptr), (yyvsp[0].declptr));
+		}
+#line 2267 "subc.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 64:
+#line 716 "subc.y" /* yacc.c:1646  */
+    {
+		}
+#line 2274 "subc.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 65:
+#line 721 "subc.y" /* yacc.c:1646  */
+    {
+			(yyval.declptr) = (yyvsp[-1].declptr);
+		}
+#line 2282 "subc.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 66:
+#line 724 "subc.y" /* yacc.c:1646  */
+    {
+			(yyval.declptr) = (yyvsp[-1].declptr);
+		}
+#line 2290 "subc.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 67:
+#line 727 "subc.y" /* yacc.c:1646  */
+    {
+			(yyval.declptr) = makenumconstdecl(inttype, (yyvsp[0].intval));
 		}
 #line 2298 "subc.tab.c" /* yacc.c:1646  */
     break;
 
-  case 61:
-#line 762 "subc.y" /* yacc.c:1646  */
-    {
-			REDUCE("binary -> binary EQUOP binary");
-			(yyval.declptr) = optype((yyvsp[-2].declptr), (yyvsp[0].declptr));
-		}
-#line 2307 "subc.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 62:
-#line 766 "subc.y" /* yacc.c:1646  */
-    {
-			REDUCE("binary -> binary '+' binary");
-			(yyval.declptr) = plustype((yyvsp[-2].declptr), (yyvsp[0].declptr));
-		}
-#line 2316 "subc.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 63:
-#line 770 "subc.y" /* yacc.c:1646  */
-    {
-			REDUCE("binary -> binary '-' binary");
-			(yyval.declptr) = minustype((yyvsp[-2].declptr), (yyvsp[0].declptr));
-		}
-#line 2325 "subc.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 64:
-#line 774 "subc.y" /* yacc.c:1646  */
-    {
-			REDUCE("binary -> unary");
-		}
-#line 2333 "subc.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 65:
-#line 780 "subc.y" /* yacc.c:1646  */
-    {
-			REDUCE("unary -> '(' expr ')'");
-			(yyval.declptr) = (yyvsp[-1].declptr);
-		}
-#line 2342 "subc.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 66:
-#line 784 "subc.y" /* yacc.c:1646  */
-    {
-			REDUCE("unary -> '(' unary ')'");
-			(yyval.declptr) = (yyvsp[-1].declptr);
-		}
-#line 2351 "subc.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 67:
-#line 788 "subc.y" /* yacc.c:1646  */
-    {
-			REDUCE("unary -> INTEGER_CONST");
-			(yyval.declptr) = makenumconstdecl(inttype, (yyvsp[0].intval));
-		}
-#line 2360 "subc.tab.c" /* yacc.c:1646  */
-    break;
-
   case 68:
-#line 792 "subc.y" /* yacc.c:1646  */
+#line 730 "subc.y" /* yacc.c:1646  */
     {
-			REDUCE("unary -> CHAR_CONST");
 			(yyval.declptr) = makecharconstdecl(chartype, (yyvsp[0].stringval));
 		}
-#line 2369 "subc.tab.c" /* yacc.c:1646  */
+#line 2306 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 69:
-#line 796 "subc.y" /* yacc.c:1646  */
+#line 733 "subc.y" /* yacc.c:1646  */
     {
-			REDUCE("unary -> STRING");
 			(yyval.declptr) = makestringconstdecl(stringtype, (yyvsp[0].stringval));
 		}
-#line 2378 "subc.tab.c" /* yacc.c:1646  */
+#line 2314 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 70:
-#line 800 "subc.y" /* yacc.c:1646  */
+#line 736 "subc.y" /* yacc.c:1646  */
     {
-			REDUCE("unary -> ID");
 
 			// ID에 대응되는 decl이 없다면, findcurrentdecl은 NULL을 리턴
 			
 			struct decl* declptr = findwholedecl((yyvsp[0].idptr));
 
-			if(!declptr) yyerror("\nerror: not declared\n");
+			if(!declptr) yyerror("error: not declared");
 
 			(yyval.declptr) = declptr;
 		}
-#line 2394 "subc.tab.c" /* yacc.c:1646  */
+#line 2329 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 71:
-#line 811 "subc.y" /* yacc.c:1646  */
+#line 746 "subc.y" /* yacc.c:1646  */
     {
-			REDUCE("unary -> '-' unary");
 			// $2 는 integer여야 한다
 			if((yyvsp[0].declptr)->type==inttype) (yyval.declptr) = (yyvsp[0].declptr);
 			else
 			{
-				yyerror("\nerror: not int type\n");
+				yyerror("error: not int type");
 				(yyval.declptr) = NULL;
 			}
 		}
-#line 2409 "subc.tab.c" /* yacc.c:1646  */
+#line 2343 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 72:
-#line 821 "subc.y" /* yacc.c:1646  */
+#line 755 "subc.y" /* yacc.c:1646  */
     {
-			REDUCE("unary -> '!' unary");
 			if((yyvsp[0].declptr)->type==inttype) (yyval.declptr) = (yyvsp[0].declptr);
 			else
 			{
-				yyerror("\nerror: not int type\n");
+				yyerror("error: not int type");
 				(yyval.declptr) = NULL;
 			}
 		}
-#line 2423 "subc.tab.c" /* yacc.c:1646  */
+#line 2356 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 73:
-#line 830 "subc.y" /* yacc.c:1646  */
+#line 763 "subc.y" /* yacc.c:1646  */
     {
-			REDUCE("unary -> unary INCOP");
-			if(!((yyval.declptr)=checkINCOPDECOP((yyvsp[-1].declptr)))) yyerror("\nerror: not char,int,ptr\n");
+			if(!((yyval.declptr)=checkINCOPDECOP((yyvsp[-1].declptr)))) yyerror("error: not char,int,ptr");
 		}
-#line 2432 "subc.tab.c" /* yacc.c:1646  */
+#line 2364 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 74:
-#line 834 "subc.y" /* yacc.c:1646  */
+#line 766 "subc.y" /* yacc.c:1646  */
     {
-			REDUCE("unary -> unary DECOP");
-			if(!((yyval.declptr)=checkINCOPDECOP((yyvsp[-1].declptr)))) yyerror("\nerror: not char,int,ptr\n");
+			if(!((yyval.declptr)=checkINCOPDECOP((yyvsp[-1].declptr)))) yyerror("error: not char,int,ptr");
 		}
-#line 2441 "subc.tab.c" /* yacc.c:1646  */
+#line 2372 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 75:
-#line 838 "subc.y" /* yacc.c:1646  */
+#line 769 "subc.y" /* yacc.c:1646  */
     {
-			REDUCE("unary -> INCOP unary");
-			if(!((yyval.declptr)=checkINCOPDECOP((yyvsp[0].declptr)))) yyerror("\nerror: not char,int,ptr\n");
+			if(!((yyval.declptr)=checkINCOPDECOP((yyvsp[0].declptr)))) yyerror("error: not char,int,ptr");
 		}
-#line 2450 "subc.tab.c" /* yacc.c:1646  */
+#line 2380 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 76:
-#line 842 "subc.y" /* yacc.c:1646  */
+#line 772 "subc.y" /* yacc.c:1646  */
     {
-			REDUCE("unary -> DECCOP unary");
-			if(!((yyval.declptr)=checkINCOPDECOP((yyvsp[0].declptr)))) yyerror("\nerror: not char,int,ptr\n");
+			if(!((yyval.declptr)=checkINCOPDECOP((yyvsp[0].declptr)))) yyerror("error: not char,int,ptr");
 		}
-#line 2459 "subc.tab.c" /* yacc.c:1646  */
+#line 2388 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 77:
-#line 846 "subc.y" /* yacc.c:1646  */
+#line 775 "subc.y" /* yacc.c:1646  */
     {
-			REDUCE("unary -> '&' unary");
 			if(check_is_var((yyvsp[0].declptr)))
 			{
 				(yyval.declptr) = makeconstdecl(makeptrdecl((yyvsp[0].declptr)));
@@ -2471,13 +2399,12 @@ yyreduce:
 				(yyval.declptr) = NULL;
 			}
 		}
-#line 2475 "subc.tab.c" /* yacc.c:1646  */
+#line 2403 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 78:
-#line 857 "subc.y" /* yacc.c:1646  */
+#line 785 "subc.y" /* yacc.c:1646  */
     {
-			REDUCE("unary -> '*' unary");
 			if(check_is_var((yyvsp[0].declptr)))
 			{
 				if((yyvsp[0].declptr)->type->typeclass==PTR) (yyval.declptr) = (yyvsp[0].declptr)->type->ptrto;
@@ -2485,75 +2412,68 @@ yyreduce:
 			else (yyval.declptr) = NULL;
 
 		}
-#line 2489 "subc.tab.c" /* yacc.c:1646  */
+#line 2416 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 79:
-#line 866 "subc.y" /* yacc.c:1646  */
+#line 793 "subc.y" /* yacc.c:1646  */
     {
-			REDUCE("unary -> unary '[' expr ']'");
 			// RHS의 unary는 const 이고, type의 typeclass는 array 인가?
 			// expr는 int type VAR 이거나, INT_CONST 인가?
 			// 조건을 충족한다면, elementvar로 VAR을 넘겨준다.
 			
 			(yyval.declptr) = arrayaccess((yyvsp[-3].declptr), (yyvsp[-1].declptr));
 		}
-#line 2502 "subc.tab.c" /* yacc.c:1646  */
+#line 2428 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 80:
-#line 874 "subc.y" /* yacc.c:1646  */
+#line 800 "subc.y" /* yacc.c:1646  */
     {
-			REDUCE("unary -> unary '.' ID");
 			(yyval.declptr) = structaccess((yyvsp[-2].declptr), (yyvsp[0].idptr));
 		}
-#line 2511 "subc.tab.c" /* yacc.c:1646  */
+#line 2436 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 81:
-#line 878 "subc.y" /* yacc.c:1646  */
+#line 803 "subc.y" /* yacc.c:1646  */
     {
-			REDUCE("unary -> unary STRUCTOP ID");
 			(yyval.declptr) = structptraccess((yyvsp[-2].declptr), (yyvsp[0].idptr));
 		}
-#line 2520 "subc.tab.c" /* yacc.c:1646  */
+#line 2444 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 82:
-#line 882 "subc.y" /* yacc.c:1646  */
+#line 806 "subc.y" /* yacc.c:1646  */
     {
-			REDUCE("unary -> unary '(' args ')'");
 			(yyval.declptr) = check_funccall((yyvsp[-3].declptr), (yyvsp[-1].declptr));
 
 		}
-#line 2530 "subc.tab.c" /* yacc.c:1646  */
+#line 2453 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 83:
-#line 887 "subc.y" /* yacc.c:1646  */
+#line 810 "subc.y" /* yacc.c:1646  */
     {
-			REDUCE("unary -> unary '(' ')'");
 			(yyval.declptr) = check_funccall((yyvsp[-2].declptr), NULL);
 		}
-#line 2539 "subc.tab.c" /* yacc.c:1646  */
+#line 2461 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 84:
-#line 894 "subc.y" /* yacc.c:1646  */
+#line 816 "subc.y" /* yacc.c:1646  */
     {
-			REDUCE("args -> expr");
 			if((yyvsp[0].declptr))
 			{
 				(yyval.declptr) = copydecl((yyvsp[0].declptr));
 			}
 		}
-#line 2551 "subc.tab.c" /* yacc.c:1646  */
+#line 2472 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 85:
-#line 901 "subc.y" /* yacc.c:1646  */
+#line 822 "subc.y" /* yacc.c:1646  */
     {
-			REDUCE("args -> args ',' expr");
 			if((yyvsp[-2].declptr) && (yyvsp[0].declptr)) 
 			{
 				(yyvsp[-2].declptr)->next = (yyvsp[0].declptr);
@@ -2561,11 +2481,11 @@ yyreduce:
 			}
 			else (yyval.declptr) = NULL;
 		}
-#line 2565 "subc.tab.c" /* yacc.c:1646  */
+#line 2485 "subc.tab.c" /* yacc.c:1646  */
     break;
 
 
-#line 2569 "subc.tab.c" /* yacc.c:1646  */
+#line 2489 "subc.tab.c" /* yacc.c:1646  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -2793,7 +2713,7 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 912 "subc.y" /* yacc.c:1906  */
+#line 832 "subc.y" /* yacc.c:1906  */
 
 
 /*  Additional C Codes 
@@ -2801,7 +2721,9 @@ yyreturn:
 
 int yyerror (char* s)
 {
-	fprintf (stderr, "%s\n", s);
+	if(filename) fprintf(stderr, "%s:",filename);
+	fprintf(stderr,"%d: ",read_line());
+	fprintf(stderr, "%s\n", s);
 }
 
 void REDUCE(char* s)
@@ -3456,7 +3378,7 @@ struct decl* check_funccall(struct decl* funcdecl, struct decl* args)
 	if(!funcdecl) return NULL;
 	else if(funcdecl->declclass != FUNC)
 	{
-		yyerror("\nerror: not a function\n");
+		yyerror("error: not a function");
 		return NULL;
 	}
 	else if(!funcdecl->formals)
@@ -3464,13 +3386,13 @@ struct decl* check_funccall(struct decl* funcdecl, struct decl* args)
 		if(!args) return makeconstdecl(funcdecl->returntype);
 		else
 		{
-			yyerror("\nerror: actual args are not equal to formals args\n");
+			yyerror("error: actual args are not equal to formals args");
 			return NULL;
 		}
 	}
 	else if(!check_sameformals(funcdecl->formals->decl, args))
 	{
-		yyerror("\nerror: actual args are not equal to formals args\n");
+		yyerror("error: actual args are not equal to formals args");
 		return NULL;
 	}
 	else
@@ -3491,11 +3413,11 @@ struct decl* arrayaccess(struct decl* arrayptr, struct decl* indexptr)
 	if(check_is_array(arrayptr))
 	{
 		if(indexptr->type == inttype) result = arrayptr->type->elementvar;
-		else yyerror("\nerror: not a int type index\n");
+		else yyerror("error: not a int type index");
 	}
 	else
 	{
-		yyerror("\nerror: not array type\n");
+		yyerror("error: not array type");
 	}
 }
 
@@ -3511,9 +3433,9 @@ struct decl* structaccess(struct decl* structptr, struct id* fieldid)
 			else entry = entry->prev;
 		}
 		if(entry) result = entry->decl;
-		else yyerror("\nstruct do not have same field\n");
+		else yyerror("struct do not have same field");
 	}
-	else yyerror("\nerror: variable is not struct\n");
+	else yyerror("error: variable is not struct");
 
 	return result;
 }
@@ -3527,7 +3449,7 @@ struct decl* structptraccess(struct decl* structptr, struct id* fieldid)
 		{
 			result = structaccess(structptr->type->ptrto, fieldid);
 		}
-		else yyerror("\nerror: variable is not struct pointer\n");
+		else yyerror("error: variable is not struct pointer");
 	}
 
 	return result;
@@ -3590,7 +3512,7 @@ struct decl* minustype(struct decl* op1, struct decl* op2)
 		else isError = true;
 	}
 
-	if(isError) yyerror("\nerror: not computable\n");
+	if(isError) yyerror("error: not computable");
 
 	return result;
 }
@@ -3612,7 +3534,7 @@ struct decl* optype(struct decl* op1, struct decl* op2)
 
 	if(isError)
 	{
-		yyerror("\nerror: not computable\n");
+		yyerror("error: not computable");
 		return NULL;
 	}
 	else return makenumconstdecl(inttype, 1);
@@ -3637,7 +3559,7 @@ struct decl* logicaltype(struct decl* op1, struct decl* op2)
 		result = NULL;
 	}
 
-	if(isError) yyerror("\nerror: not int type\n");
+	if(isError) yyerror("error: not int type");
 
 	return result;
 }

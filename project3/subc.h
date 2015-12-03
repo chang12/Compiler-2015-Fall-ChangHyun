@@ -56,6 +56,8 @@ struct decl* chartype;
 struct decl* stringtype;
 struct decl* voidtype;
 
+char* filename;
+
 /* 
 	For hash table 
 	In this project code, only use "enter" function

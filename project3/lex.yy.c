@@ -1991,8 +1991,17 @@ int main(int argc, char* argv[])
 
    init_type();
 
-   if(argc >= 2) yyin = fopen(argv[1], "r");
-   else yyin = stdin;
+   if(argc >= 2) 
+   {
+   	  yyin = fopen(argv[1], "r");
+	  filename = (char*)malloc(sizeof(char)*strlen(argv[1]));
+	  strcpy(filename, argv[1]);
+   }
+   else 
+   {
+   	  yyin = stdin;
+	  filename = NULL;
+   }
    if(!yyin) {
       printf("Can't open input stream!\n");
       exit(1);
