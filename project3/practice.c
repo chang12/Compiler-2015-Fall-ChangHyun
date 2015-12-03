@@ -40,6 +40,14 @@ int main()
 
 //	fprintf(stderr,"%s",strcat(errorMsg,strcat(a," test")));
 //	printf("%s\n",strcat(error,strcat(a, " test")));
+
+	int a[10];
+	int i;
+	for(i=0;i<10;i++) a[i] = 3;
+
+	fprintf(stderr,"%p\n",a);
+	a[5] = 4;
+	fprintf(stderr,"%d\n",*(a+5));
 }
 
 void yyerror(char *s)

@@ -834,19 +834,19 @@ unary
 		}
 		| unary INCOP{
 			REDUCE("unary -> unary INCOP");
-			$$ = checkINCOPDECOP($1);
+			if(!($$=checkINCOPDECOP($1))) yyerror("\nerror: not char,int,ptr\n");
 		}
 		| unary DECOP{
 			REDUCE("unary -> unary DECOP");
-			$$ = checkINCOPDECOP($1);
+			if(!($$=checkINCOPDECOP($1))) yyerror("\nerror: not char,int,ptr\n");
 		}
 		| INCOP unary{
 			REDUCE("unary -> INCOP unary");
-			$$ = checkINCOPDECOP($2);
+			if(!($$=checkINCOPDECOP($2))) yyerror("\nerror: not char,int,ptr\n");
 		}
 		| DECOP unary{
 			REDUCE("unary -> DECCOP unary");
-			$$ = checkINCOPDECOP($2);
+			if(!($$=checkINCOPDECOP($2))) yyerror("\nerror: not char,int,ptr\n");
 		}
 		| '&' unary	%prec '!'{
 			REDUCE("unary -> '&' unary");
@@ -939,7 +939,6 @@ void push_scope()
 
 struct ste* pop_scope()
 {
-	fprintf(stderr,"\n\n##########pop##############\n\n");
 	struct ste* result = NULL;
 	struct ste* currtop = cscope->top;
 	struct ste* dummy = (struct ste*)malloc(sizeof(struct ste*));
@@ -952,7 +951,6 @@ struct ste* pop_scope()
 		cscope->top = currtop->prev;
 		if(check_is_struct_type(currtop->decl))
 		{
-			fprintf(stderr,"\ncheck2\n");
 			strbottom->prev = currtop;
 			strbottom = currtop;
 			strbottom->prev = NULL;
@@ -963,7 +961,6 @@ struct ste* pop_scope()
 			result = currtop;
 		}
 		currtop = cscope->top;
-		fprintf(stderr,"\n\n%p\n\n",strbottom);
 	}
 	
 	struct sse* temp = cscope;
@@ -1377,7 +1374,6 @@ bool check_is_array(struct decl* declptr)
 	{
 		if(declptr->type->typeclass==ARRAY) result = true;
 	}
-	if(!result) yyerror("\nerror: not array type \n");
 	return result;
 }
 
@@ -1410,14 +1406,38 @@ bool check_compatibledecl(struct decl* declptr1, struct decl* declptr2)
 		if(declptr1->type && declptr2->type)
 		{
 			if(declptr1->type==declptr2->type) result = true;
-			else if((declptr1->type->typeclass==PTR)&&(declptr2->type->typeclass==PTR))
+			else if(check_is_ptr(declptr1))
 			{
-			
-				if(declptr1->type->ptrto->type==declptr2->type->ptrto->type) result = true;	
+				if(check_is_ptr(declptr2))
+				{
+					struct decl* ptr1 = declptr1->type->ptrto;
+					struct decl* ptr2 = declptr2->type->ptrto;
+					if(ptr1->type==ptr2->type) result = true;
+				}
+				else if(check_is_array(declptr2))
+				{
+					struct decl* ptr1 = declptr1->type->ptrto;
+					struct decl* ptr2 = declptr2->type->elementvar;
+					if(ptr1->type==ptr2->type) result = true;
+				}
+			}
+			else if(check_is_array(declptr1))
+			{
+				if(check_is_ptr(declptr2))
+				{
+					struct decl* ptr1 = declptr1->type->elementvar;
+					struct decl* ptr2 = declptr2->type->ptrto;
+					if(ptr1->type==ptr2->type) result = true;
+				}
+				else if(check_is_array(declptr2))
+				{
+					struct decl* ptr1 = declptr1->type->elementvar;
+					struct decl* ptr2 = declptr2->type->elementvar;
+					if(ptr1->type==ptr2->type) result = true;
+				}
 			}
 		}
 	}
-		
 	return result;
 }
 
@@ -1592,6 +1612,10 @@ struct decl* arrayaccess(struct decl* arrayptr, struct decl* indexptr)
 	{
 		if(indexptr->type == inttype) result = arrayptr->type->elementvar;
 		else yyerror("\nerror: not a int type index\n");
+	}
+	else
+	{
+		yyerror("\nerror: not array type\n");
 	}
 }
 

@@ -13,15 +13,13 @@
 	}
 }*/
 
+int a;
+char b;
+int *c;
+char d[10];
+struct temp {int a;}e;
 
-struct a{
-	struct b{} i;
-};
-/*
 int main()
 {
-	struct b{
-		int i;
-	};
+	a = a++;
 }
-*/
