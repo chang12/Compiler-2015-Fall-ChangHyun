@@ -41,7 +41,8 @@ void 	REDUCE(char* s);
 %left	'+' '-'
 %left	'*' '/' '%' 
 %right	'!' INCOP DECOP
-%left 	'[' ']' '(' ')' '.' STRUCTOP
+%right 	'[' ']' '(' ')' '.' ELSE
+%left STRUCTOP
 
 /* Token and Types */
 %type<boolval>		pointers param_list
@@ -156,9 +157,6 @@ ext_def
 		| func_decl compound_stmt{
 			if($1) $1->value = 2;
 			REDUCE("ext_def -> func_decl compound_stmt");
-		}
-		| PRINT{
-			printste(cscope->top);
 		}
 		;
 
@@ -594,10 +592,7 @@ def
 		}
 		| func_decl ';'{
 			REDUCE("def -> func_decl ';'");
-		}
-		| PRINT{
-			printste(cscope->top);
-		}
+		}	
 		;
 
 compound_stmt
@@ -1071,7 +1066,7 @@ struct decl	*maketypedecl(int typeclass)
 	return result;
 }
 
-struct decl	*makestructdecl(struct decl* fields)
+struct decl	*makestructdecl(struct ste* fields)
 {
 	struct decl* result = (struct decl*)malloc(sizeof(struct decl));
 	result->declclass = TYPE;

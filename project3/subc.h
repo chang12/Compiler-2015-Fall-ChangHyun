@@ -8,7 +8,7 @@
 #define __SUBC_H__
 
 #include <stdio.h>
-#include <strings.h>
+#include <string.h>
 #include <stdbool.h>
 
 /* 
@@ -77,7 +77,7 @@ struct decl* makevardecl(struct decl* type);
 struct decl* makeptrdecl(struct decl* ptrtodecl);
 struct decl* makearraydecl(struct decl* elementvar);
 struct decl* maketypedecl(int typeclass);
-struct decl* makestructdecl(struct decl* fields);
+struct decl* makestructdecl(struct ste* fields);
 struct decl* makefuncdecl(struct decl* returntypedecl);
 struct decl* makeconstdecl(struct decl* type);
 struct decl* makenumconstdecl(struct decl* type, int value);

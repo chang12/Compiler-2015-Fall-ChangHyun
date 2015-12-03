@@ -13,13 +13,10 @@
 	}
 }*/
 
-int a;
-char b;
-int *c;
-char d[10];
-struct temp {int a;}e;
-
-int main()
-{
-	a = a++;
-}
+struct a{
+	struct b x;
+	struct b* p;
+	struct b {} y;
+};
+struct b{
+};
