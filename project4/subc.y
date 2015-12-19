@@ -790,7 +790,7 @@ unary
 			}
 		}
 		| '*' unary	%prec '!'{
-			if(check_is_var($2))
+			if(check_is_var($2)||check_is_const($2))
 			{
 				if($2->type->typeclass==PTR) $$ = $2->type->ptrto;
 			}
@@ -1105,14 +1105,13 @@ struct decl	*makestringconstdecl(struct decl* type, char* value)
 {
 	struct decl* result = (struct decl*)malloc(sizeof(struct decl));
 	int length = strlen(value);
-	char* string = (char*)malloc(sizeof(char)*(length+1));
-	strncpy(string, value, length);
 
 	result->declclass = CONST;
 	result->type = type;
 	result->value = 0;
 	result->charconst = '\0';
-	result->string = string;
+	result->string = (char*)malloc(sizeof(char)*length);
+	strncpy(result->string, value, length);
 	result->formals = NULL;
 	result->returntype = NULL;
 	result->typeclass = 0;
@@ -1133,8 +1132,6 @@ void declare(struct id* idptr, struct decl* declptr)
 	entry->decl = declptr;
 	entry->prev = cscope->top;
 	cscope->top = entry;
-//	printf("entry: %p\n", entry);
-//	printf("top: %p\n", cscope->top);
 	return;
 }
 
@@ -1153,20 +1150,6 @@ void init_type()
 	declare(enter(VOID, "void", 4), voidtype);
 	
 	returnid = enter(ID, "*return", 7);
-
-	// TEST
-//	char* s = ("abcedfg%s","xyz");
-//	printf("%s",s);
-//	struct ste* temp1 = NULL;
-//	struct ste* temp2 = NULL;
-//	printf("NULL test\n");
-//	printf(temp1==temp2? "true\n" : "false\n");
-//	struct ste* temp1 = cscope->top;
-//	struct ste* temp2 = temp1->prev;
-//	printf("temp1: %p\n", temp1);
-//	printf("temp2: %p\n", temp2);
-//	struct ste* temp3 = cscope->top;
-//	printf(temp1==temp3? "true\n" : "false\n");
 }
 
 struct decl* findcurrentdecl(struct id* name)
@@ -1196,7 +1179,6 @@ struct decl* findstructdecl(struct id* name)
 			}
 
 		}
-//		if((entry->name==name)&&(entry->decl->typeclass==STRUCT)) break;
 		else entry = entry->prev;
 	}
 	return entry? entry->decl : NULL;
@@ -1617,7 +1599,7 @@ struct decl* plustype(struct decl* op1, struct decl* op2)
 		else isError = true;
 	}
 
-	if(isError) yyerror("\nerror: not computable\n");
+	if(isError) yyerror("error: not computable");
 
 	return result;
 }

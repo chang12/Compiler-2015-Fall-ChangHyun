@@ -29,7 +29,6 @@ special-char	\\[nt]
 		   return entered->lextype;
 		}
 
-"print"			{ return PRINT;}
 {integer_const}	{
 				   yylval.intval = atoi(yytext);
 				   return INTEGER_CONST;
