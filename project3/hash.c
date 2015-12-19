@@ -16,19 +16,13 @@ struct id *enter(int lextype, char *str, int length) {
    /* implementaion is almost same with Project1 Code */
    
    /****************************************************
-   Copy detected identifier or keyword (str) to heap
-   ****************************************************/
-   char* name = (char*)malloc(sizeof(char)*(length+1));
-   strncpy(name, str, length);
-
-   /****************************************************
    Use hash table of STL <search.h>
    FOr searching, set name as a key of ENTRY item
    ****************************************************/
    ENTRY item;
    ENTRY* result;
 
-   item.key = name;
+   item.key = str;
 
    result = hsearch(item, FIND);
 
@@ -52,9 +46,11 @@ struct id *enter(int lextype, char *str, int length) {
 		   data = (struct id*)malloc(sizeof(struct id));
 
 		   data->lextype = lextype;
-		   data->name = name;
+		   data->name = (char*)malloc(sizeof(char)*length);
+		   strncpy(data->name, str, length);
 
 		   item.data = data;
+		   item.key = data->name;
 
 		   result = hsearch(item, ENTER);
    }
@@ -62,8 +58,3 @@ struct id *enter(int lextype, char *str, int length) {
    return data;
 
 }
-
-struct id *lookup(char *name) {
-   /* implementation is given here */
-}
-

@@ -23,18 +23,17 @@ special-char	\\[nt]
 %x COMMENT
 %%
 
+{id}	{
+		   struct id *entered  = enter(ID, yytext, yyleng);
+		   yylval.idptr = entered;
+		   return entered->lextype;
+		}
+
 "print"			{ return PRINT;}
 {integer_const}	{
 				   yylval.intval = atoi(yytext);
 				   return INTEGER_CONST;
 				}
-"return"		{ return RETURN; }
-"if"			{ return IF; }
-"else"			{ return ELSE; }
-"while"			{ return WHILE; }
-"for"			{ return FOR; }
-"break"			{ return BREAK; }
-"continue"		{ return CONTINUE; }
 "||"			{ return LOGICAL_OR; }
 "&&"			{ return LOGICAL_AND; }
 "<"		|
@@ -51,12 +50,6 @@ special-char	\\[nt]
 "--"			{ return DECOP; }
 "->"			{ return STRUCTOP; }
 
-
-{id}	{
-		   struct id *entered  = enter(ID, yytext, yyleng);
-		   yylval.idptr = entered;
-		   return entered->lextype;
-		}
 \"({special-char}|[^\\\"\n])*\"	{
 			/* String Variable */
 		   yylval.stringval = yytext;
