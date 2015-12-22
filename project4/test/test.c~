@@ -1,0 +1,10 @@
+int x;
+
+int main(){
+
+	x = 3;
+
+	write_int(a);
+	write_string("\n");
+
+}

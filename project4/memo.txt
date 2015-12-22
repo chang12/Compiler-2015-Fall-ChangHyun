@@ -1,0 +1,29 @@
+
+global variable 은 Lglob 을 사용해서,
+local variable 은 fp 를 사용해서 접근하면 된다.
+
+
+그러므로 적절한 때에 fp, sp 값을 잘 갱신해주고,
+필요할 때는 의심없이 사용하면 된다.
+
+
+function declaration이 prototyping 없이 바로 이뤄지므로,
+function 을 만나면 이름을 가지고 label 지어서 안에 코드를 적어주면 된다.
+
+
+함수 안에서 int i; 를 만나면 어떻게 해야할까?
+local variable 이 하나 생겼다.
+일단 offset scope 에 무언가 작업을 해줘야할 것이다.
+가장 간단한 int main(void) 를 만난다면, param 가 없으므로 이를 옮겨오는 과정은 필요없을 것이고 ...
+i 라는 ID의 decl에는 offset = 0 으로 두면 될 것이다.
+
+int i; 만으로는 간단하니,
+int i;
+char j;
+struct str1 k;
+정도를 declare 해놓고, 각각에 값을 assign 하는 경우를 생각해봐야겠다.
+
+그러므로 unary 처리하는 것보다, 더 우선되어야 할 것이 unary = expr 의 처리라고 생각된다....
+그리고 그보다 더 우선되어야할 것은 unary -> ID 로 값을 assign 하는 것...!!
+
+

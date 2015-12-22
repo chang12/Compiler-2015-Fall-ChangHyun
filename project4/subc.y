@@ -54,114 +54,72 @@ void 	REDUCE(char* s);
 
 %%
 program
-		: ext_def_list{
-		}	
+		: ext_def_list
 		;
 
 ext_def_list
-		: ext_def_list ext_def{
-		}
-		| /* empty */{
-		}
+		: ext_def_list ext_def
+		| /* empty */
 		;
 
 ext_def
 		: type_specifier pointers ID ';'{
-			// ID 값으로 동일 scope에 존재하는 값인지 여부 체크
-			// 재정의하면 error
-			struct decl* declptr = findcurrentdecl($3);
-			if(declptr)
+
+			if($2)
 			{
-				// 동일 name으로 존재하더라도, struct 정의라면 허용한다.
-				// ex) struct a{}; 하고 int a; 해도 문제 X
-				// 그러므로 findcurrentdecl로 반환된 declclass 까지 반환한다.
-				// 위의 내용을 findcurrentdecl 에서 수행하도록 옮겼다.
-				char errorMsg[100] = "error: redeclaration of ";
-				yyerror(strcat(errorMsg, $3->name));
+				// VAR PTR declaration
+				declare($3, makevardecl(makeptrdecl(makevardecl($1))));
+				coffset->offset = coffset->offset + 1;
 			}
 			else
 			{
-				if($1)
-				{
-					if($2)
-					{
-						// VAR PTR
-						declare($3, makevardecl(makeptrdecl(makevardecl($1))));
-					}
-					else
-					{
-						// VAR
-						declare($3, makevardecl($1));
-					}
-				}
+				// VAR declaration
+				declare($3, makevardecl($1));
+				coffset->offset = coffset->offset + $1->size;
 			}
+
 		}
 		| type_specifier pointers ID '[' const_expr ']' ';'{
 
-			// ID integrity
-			struct decl* declptr = findcurrentdecl($3);
-			if(declptr)
+			if($5->declclass==CONST)
 			{
-				char errorMsg[100] = "error: redeclaration of ";
-				yyerror(strcat(errorMsg, $3->name));
-			}
-			else
-			{
-				// TYPE integrity
-				if($1)
+				if($5->type==inttype)
 				{
-					// Array size integrity
-					if($5)
+					struct decl* elementvar;
+					if($2)
 					{
-						// CONST 이고, type이 inttype
-						if($5->declclass==CONST)
-						{
-							if($5->type==inttype)
-							{
-								struct decl* elementvar;
-								if($2)
-								{
-									elementvar = makevardecl(makeptrdecl(makevardecl($1)));
-								}
-								else
-								{
-									elementvar = makevardecl($1);
-								}	
-							
-								declare($3, makeconstdecl(makearraydecl(elementvar)));
-							}
-						}
+						elementvar = makevardecl(makeptrdecl(makevardecl($1)));
 					}
-					
+					else
+					{
+						elementvar = makevardecl($1);
+					}
+					declare($3, makeconstdecl(makearraydecl(elementvar)));
 				}
 			}
 		}
 		| func_decl ';'{
-			if($1)
-			{
-				if($1->value == 1)
-				{
-					yyerror("error: function redeclaration");
-				}
-			}
+			// 프로젝트4 에서는 이 Grammar는 쓰이지 않을 것이다.
 		}
 		| type_specifier ';'{
 		}
 		| func_decl compound_stmt{
-			if($1) $1->value = 2;
+			// Semantic error가 있는 코드는 입력되지 않으므로,
+			// 프로젝트3에서 func_decl에 대한 value를 체크한 내역은 지웠다.
 		}
 		;
 
 type_specifier
 		: TYPE{
+			REDUCE("type_specifier -> TYPE");
 			if(!strcmp($1->name,"int")) $$ = inttype;
 			else if(!strcmp($1->name,"char")) $$ = chartype;
-			else $$ = NULL;
 		}
 		| VOID{
 			$$ = voidtype;
 		}
 		| struct_specifier{
+			$$ = $1;
 		}
 		;
 
@@ -173,210 +131,86 @@ struct_specifier
 		  	def_list '}'
 			{
 				struct ste* fields = pop_scope();
-				if(findstructdecl($2))
-				{
-					yyerror("error: redeclaration");
-					$$ = NULL;
-				}
-				else declare($2, $$=makestructdecl(fields));
-				// 새로운 struct type을 생성함
+				declare($2, $$=makestructdecl(fields));
 			}
 		| STRUCT ID{
-			// ID로 미리 정의되어있는 struct type 인지 확인한다.
-			struct decl* structdecl = findstructdecl($2);
-			$$ = NULL;
-			if(structdecl) $$ = structdecl;
-			else
-			{
-				yyerror("error: incomplete type error");
-			}
-
+			// ID로 미리 정의되어있을 struct type의 decl을 받아와서 올린다.
+			$$ = findstructdecl($2);
 		}
 		;
 
 func_decl
 		: type_specifier pointers ID '(' ')'{
-			
-			// 존재하는 func 이름인지 확인
-			struct decl* funcdecl = findfuncdecl($3);
+			fprintf(codefile, "%s:\n", $3->name);
+			clabel = $3->name;
+			REDUCE("func_decl -> type_specifier pointers ID '(' ')'");
+			// function을 정의하면서, 선언까지 함께 해주기 때문에
+			// 당연히 존재하지 않는 func 이름일 것이다.
 
-			if(funcdecl)
+			struct decl* funcdecl = NULL;
+
+			if($2) 
 			{
-				if(check_samereturntype(funcdecl->returntype, $1, $2))
-				{
-					if(funcdecl->formals)
-					{
-						yyerror("error: conflicting types for function");
-						$$ = NULL;
-					}
-					else if(funcdecl->value == 2)
-					{
-						yyerror("error: function redeclaration");
-						$$ = NULL;
-					}
-					else
-					{
-						funcdecl->value = 1;
-						$$ = funcdecl;
-					}
-				}
-				else
-				{
-					yyerror("error: conflicting types for function");
-					$$ = NULL;
-				}
+				funcdecl = makefuncdecl(makeptrdecl(makeconstdecl($1)));
+				declare($3, funcdecl);
+				$$ = funcdecl;
 			}
 			else
 			{
-				if($2) 
-				{
-					funcdecl = makefuncdecl(makeptrdecl(makeconstdecl($1)));
-					declare($3, funcdecl);
-					$$ = funcdecl;
-				}
-				else
-				{
-					funcdecl = makefuncdecl($1);
-					declare($3, funcdecl);
-					$$ = funcdecl;
-				}
-			}			
+				funcdecl = makefuncdecl($1);
+				declare($3, funcdecl);
+				$$ = funcdecl;
+				fprintf(stderr,"%p\n",$$);
+			}
 		}
 		| type_specifier pointers ID '(' VOID ')'{
 
-			// 존재하는 func 이름인지 확인
-			struct decl* funcdecl = findfuncdecl($3);
+			struct decl* funcdecl = NULL;
 
-			if(funcdecl)
+			if($2) 
 			{
-				if(check_samereturntype(funcdecl->returntype, $1, $2))
-				{
-					if(funcdecl->formals)
-					{
-						yyerror("error: conflicting types for function");
-						$$ = NULL;
-					}
-					else if(funcdecl->value == 2)
-					{
-						yyerror("error: function redeclaration");
-						$$ = NULL;
-					}
-					else
-					{
-						funcdecl->value = 1;
-						$$ = funcdecl;
-					}
-				}
-				else
-				{
-					yyerror("error: conflicting types for function");
-					$$ = NULL;
-				}
+				funcdecl = makefuncdecl(makeptrdecl(makeconstdecl($1)));
+				declare($3, funcdecl);
+				$$ = funcdecl;
 			}
 			else
 			{
-				if($2) 
-				{
-					funcdecl = makefuncdecl(makeptrdecl(makeconstdecl($1)));
-					declare($3, funcdecl);
-					$$ = funcdecl;
-				}
-				else
-				{
-					funcdecl = makefuncdecl($1);
-					declare($3, funcdecl);
-					$$ = funcdecl;
-				}
+				funcdecl = makefuncdecl($1);
+				declare($3, funcdecl);
+				$$ = funcdecl;
 			}
+
 		}
 		| type_specifier pointers ID '(' {
+			
 			// FUNC declare 는 param_list 를 확인한 뒤로 미룬다
-			struct decl* funcdecl = findfuncdecl($3);
+			struct decl* funcdecl = NULL;
+			struct decl* returntypedecl = NULL;
 
-			if(funcdecl)
+			if($2) 
 			{
-				if(check_samereturntype(funcdecl->returntype, $1, $2))
-				{
-					if(funcdecl->value == 2)
-					{
-						yyerror("error: function redeclaration");
-						$<declptr>$ = NULL;
-					}
-					else
-					{
-						funcdecl->value = 1;
-						$<declptr>$ = funcdecl;
-					}
-				}
-				else
-				{
-					yyerror("error: conflicting types for function");
-					$<declptr>$ = NULL;
-				}
-				push_scope();
-				declare(returnid, funcdecl->returntype);
+				returntypedecl = makeptrdecl(makeconstdecl($1));
+				$<declptr>$ = makefuncdecl(returntypedecl);
 			}
 			else
 			{
-				struct decl* returntypedecl = NULL;
-				if($2) 
-				{
-					returntypedecl = makeptrdecl(makeconstdecl($1));
-					$<declptr>$ = makefuncdecl(returntypedecl);
-				}
-				else
-				{
-					returntypedecl = $1;
-					$<declptr>$ = makefuncdecl(returntypedecl);
-				}
-				push_scope();
-				declare(returnid,returntypedecl);
+				returntypedecl = $1;
+				$<declptr>$ = makefuncdecl(returntypedecl);
 			}
+			push_scope();
+			declare(returnid,returntypedecl);
+
 		}
 		  param_list ')'{
-			// param_list 받는 과정에서 error가 발생할 수 있다
-			// 그러므로 param_list 의 NULL 여부를 체크한다.
-			// 그리고 func_decl 에 declptr을 매기는 작업도, 여기서 해준다.
 
 			struct ste*	formals = pop_scope();
 			connectdecl(formals);
 			struct decl* funcdecl = $<declptr>5;
 
+			funcdecl->formals = formals->prev;
+			$$ = funcdecl;
+			declare($3, funcdecl);
 
-			bool clear = true;
-
-			if(!funcdecl)
-			{
-				$$ = NULL;
-				clear = false;
-			}
-			else if(!$6)
-			{
-				// funcdecl exists, but param_list error
-				if(funcdecl->value == 1) funcdecl->value = 0;
-				$$ = NULL;
-				clear = false;
-			}
-			else
-			{
-				if(funcdecl->value == 1)
-				{
-					if(!check_sameformals(funcdecl->formals->decl, formals->prev->decl))
-					{
-						yyerror("error: conflicting types for function");
-						funcdecl->value = 0;
-						$$ = NULL;
-						clear = false;
-					}
-				}
-			}
-
-			if(clear)
-			{
-				funcdecl->formals = formals->prev;
-				$$ = funcdecl;
-				declare($3, funcdecl);
-			}
 		}
 	;
 
@@ -400,171 +234,94 @@ param_list  /* list of formal parameter declaration */
 
 param_decl  /* formal parameter declaration */
 		: type_specifier pointers ID{
-			// ID 값으로 동일 scope에 존재하는 값인지 여부 체크
-			// 재정의하면 error
-			struct decl* declptr = findcurrentdecl($3);
-			if(declptr)
+
+			if($2)
 			{
-				// 동일 name으로 존재하더라도, struct 정의라면 허용한다.
-				// ex) struct a{}; 하고 int a; 해도 문제 X
-				// 그러므로 findcurrentdecl로 반환된 declclass 까지 반환한다.
-				// 위의 내용을 findcurrentdecl 에서 수행하도록 옮겼다.
-				char errorMsg[100] = "error: redeclaration of ";
-				yyerror(strcat(errorMsg, strcat($3->name,"\n")));
-				$$ = NULL;
+				// VAR PTR
+				struct decl* declptr = makevardecl(makeptrdecl(makevardecl($1)));
+				declare($3, declptr);
+				$$ = declptr;
 			}
 			else
 			{
-				if($1)
+				// VAR
+				struct decl* declptr = makevardecl($1);
+				declare($3, declptr);
+				$$ = declptr;
+			}
+
+		}
+		| type_specifier pointers ID '[' const_expr ']'{
+
+			// CONST 이고, type이 inttype
+			if($5->declclass==CONST)
+			{
+				if($5->type==inttype)
 				{
+					struct decl* elementvar;
 					if($2)
 					{
-						// VAR PTR
-						struct decl* declptr = makevardecl(makeptrdecl(makevardecl($1)));
-						declare($3, declptr);
-						$$ = declptr;
+						elementvar = makevardecl(makeptrdecl(makevardecl($1)));
 					}
 					else
 					{
-						// VAR
-						struct decl* declptr = makevardecl($1);
-						declare($3, declptr);
-						$$ = declptr;
+						elementvar = makevardecl($1);
 					}
+					struct decl* declptr = makeconstdecl(makearraydecl(elementvar));
+					declare($3, declptr);
+					$$ = declptr;
 				}
 			}
-		}
-		| type_specifier pointers ID '[' const_expr ']'{
-			// ID integrity
-			struct decl* declptr = findcurrentdecl($3);
-			if(declptr)
-			{
-				char errorMsg[100] = "error: redeclaration of ";
-				yyerror(strcat(errorMsg, $3->name));
-				$$ = NULL;
-			}
-			else
-			{
-				$$ = NULL;
-				// TYPE integrity
-				if($1)
-				{
-					// Array size integrity
-					if($5)
-					{
-						// CONST 이고, type이 inttype
-						if($5->declclass==CONST)
-						{
-							if($5->type==inttype)
-							{
-								struct decl* elementvar;
-								if($2)
-								{
-									elementvar = makevardecl(makeptrdecl(makevardecl($1)));
-								}
-								else
-								{
-									elementvar = makevardecl($1);
-								}
-								struct decl* declptr = makeconstdecl(makearraydecl(elementvar));
-								declare($3, declptr);
-								$$ = declptr;
-							}
-						}
-					}
 					
-				}
-			}
 		}
 		;
 
 def_list    /* list of definitions, definition can be type(struct), variable, function */
-		: def_list def{
-		}
-		| /* empty */{
-		}
+		: def_list def
+		| /* empty */
 		;
 
 def
 		: type_specifier pointers ID ';'{
-			// ID 값으로 동일 scope에 존재하는 값인지 여부 체크
-			// 재정의하면 error
-			if($1)
+			REDUCE("def -> type_specifier pointers ID");
+		
+			if($2)
 			{
-				struct decl* declptr = findcurrentdecl($3);
-				if(declptr)
-				{
-					// 동일 name으로 존재하더라도, struct 정의라면 허용한다.
-					// ex) struct a{}; 하고 int a; 해도 문제 X
-					// 그러므로 findcurrentdecl로 반환된 declclass 까지 반환한다.
-				// 위의 내용을 findcurrentdecl 에서 수행하도록 옮겼다.
-					char errorMsg[100] = "error: redeclaration of ";
-					yyerror(strcat(errorMsg, $3->name));
-				}
-				else
-				{
-					if($1)
-					{
-						if($2)
-						{
-							// VAR PTR
-							declare($3, makevardecl(makeptrdecl(makevardecl($1))));
-						}
-					else
-						{
-							// VAR
-							declare($3, makevardecl($1));
-						}
-					}
-				}
+				// VAR PTR
+				declare($3, makevardecl(makeptrdecl(makevardecl($1))));
+				coffset->offset = coffset->offset + 1;
 			}
+			else
+			{
+				// VAR
+				declare($3, makevardecl($1));
+				coffset->offset = coffset->offset + $1->size;
+			}
+
 		}
 		| type_specifier pointers ID '[' const_expr ']' ';'{
 
-			if($1)
-			{
-				// ID integrity
-				struct decl* declptr = findcurrentdecl($3);
-				if(declptr)
+				// CONST 이고, type이 inttype
+				if($5->declclass==CONST)
 				{
-					char errorMsg[100] = "error: redeclaration of ";
-					yyerror(strcat(errorMsg, $3->name));
-				}
-				else
-				{
-					// TYPE integrity
-					if($1)
+					if($5->type==inttype)
 					{
-						// Array size integrity
-						if($5)
+						struct decl* elementvar;
+						if($2)
 						{
-							// CONST 이고, type이 inttype
-							if($5->declclass==CONST)
-							{
-								if($5->type==inttype)
-								{
-									struct decl* elementvar;
-									if($2)
-									{
-										elementvar = makevardecl(makeptrdecl(makevardecl($1)));
-									}
-									else
-									{
-										elementvar = makevardecl($1);
-									}	
-								
-										declare($3, makeconstdecl(makearraydecl(elementvar)));
-								}
-							}
-						}		
+							elementvar = makevardecl(makeptrdecl(makevardecl($1)));
+						}
+						else
+						{
+							elementvar = makevardecl($1);
+						}	
+						declare($3, makeconstdecl(makearraydecl(elementvar)));
 					}
 				}
-			}
+
 		}
-		| type_specifier ';'{
-		}
-		| func_decl ';'{
-		}	
+		| type_specifier ';'
+		| func_decl ';'
 		;
 
 compound_stmt
@@ -582,8 +339,17 @@ compound_stmt
 				}
 			}
 
-		} local_defs stmt_list '}'{
+		} local_defs {
+			fprintf(codefile, "\tshift_sp %d\n", coffset->offset);
+			fprintf(codefile, "%s_start:\n", clabel);
+		} stmt_list '}'{
 			pop_scope();
+			fprintf(codefile, "%s_final:\n", clabel);
+			fprintf(codefile, "\tpush_reg fp\n");
+			fprintf(codefile, "\tpop_reg sp\n");
+			fprintf(codefile, "\tpop_reg fp\n");
+			fprintf(codefile, "\tpop_reg pc\n");
+			fprintf(codefile, "%s_end:\n", clabel);
 		}
 		;
 
@@ -605,21 +371,8 @@ stmt
 		| compound_stmt{
 		}
 		| RETURN ';'{
-			struct decl* type = findwholedecl(returnid);
-			if(type != voidtype) 
-			{
-				yyerror("error: return value is not return type");
-			}
 		}
 		| RETURN expr ';'{
-			struct decl* type = findwholedecl(returnid);
-			if($2)
-			{
-				if(!check_compatibletype($2->type, type))
-				{
-					yyerror("error: return value is not return type");
-				}	
-			}
 		}
 		| ';'{
 		}
@@ -655,21 +408,7 @@ const_expr
 
 expr
 		: unary '=' expr{
-			bool result = false;
-			if(check_is_var($1))
-			{
-				if(check_compatibledecl($1, $3)) $$ = $1;
-				else
-				{
-					yyerror("error: LHS and RHS are not same type");
-					$$ = NULL;
-				}
-			}
-			else
-			{
-				yyerror("error: LHS is not a varaible");
-				$$ = NULL;
-			}
+			$$ = $1;
 		}
 		| or_expr{
 			$$ = $1;
@@ -741,31 +480,16 @@ unary
 			$$ = makestringconstdecl(stringtype, $1);
 		}
 		| ID{
-
 			// ID에 대응되는 decl이 없다면, findcurrentdecl은 NULL을 리턴
-			
-			struct decl* declptr = findwholedecl($1);
-
-			if(!declptr) yyerror("error: not declared");
-
-			$$ = declptr;
+			$$ = findwholedecl($1);
 		}
 		| '-' unary	%prec '!'{
-			// $2 는 integer여야 한다
-			if($2->type==inttype) $$ = $2;
-			else
-			{
-				yyerror("error: not int type");
-				$$ = NULL;
-			}
+			// $2 는 type이 inttype 이어야 한다.
+			$$ = $2;
 		}
 		| '!' unary{
-			if($2->type==inttype) $$ = $2;
-			else
-			{
-				yyerror("error: not int type");
-				$$ = NULL;
-			}
+			// $2 는 type이 inttype 이어야 한다.
+			$$ = $2;
 		}
 		| unary INCOP{
 			if(!($$=checkINCOPDECOP($1))) yyerror("error: not char,int,ptr");
@@ -780,28 +504,15 @@ unary
 			if(!($$=checkINCOPDECOP($2))) yyerror("error: not char,int,ptr");
 		}
 		| '&' unary	%prec '!'{
-			if(check_is_var($2))
-			{
-				$$ = makeconstdecl(makeptrdecl($2));
-			}
-			else
-			{
-				$$ = NULL;
-			}
+			$$ = makeconstdecl(makeptrdecl($2));
 		}
 		| '*' unary	%prec '!'{
-			if(check_is_var($2)||check_is_const($2))
-			{
-				if($2->type->typeclass==PTR) $$ = $2->type->ptrto;
-			}
-			else $$ = NULL;
-
+			$$ = $2->type->ptrto;
 		}
 		| unary '[' expr ']'{
 			// RHS의 unary는 const 이고, type의 typeclass는 array 인가?
 			// expr는 int type VAR 이거나, INT_CONST 인가?
 			// 조건을 충족한다면, elementvar로 VAR을 넘겨준다.
-			
 			$$ = arrayaccess($1, $3);
 		}
 		| unary '.' ID{
@@ -812,7 +523,6 @@ unary
 		}
 		| unary '(' args ')'{
 			$$ = check_funccall($1, $3);
-
 		}
 		| unary '(' ')'{
 			$$ = check_funccall($1, NULL);
@@ -821,18 +531,11 @@ unary
 
 args    /* actual parameters(function arguments) transferred to function */
 		: expr{
-			if($1)
-			{
-				$$ = copydecl($1);
-			}
+			$$ = copydecl($1);
 		}
 		| expr ',' args{
-			if($1 && $3) 
-			{
-				$1->next = $3;
-				$$ = $1;
-			}
-			else $$ = NULL;
+			$1->next = $3;
+			$$ = $1;
 		}
 		;
 
@@ -859,6 +562,11 @@ void push_scope()
 	sseptr->top = cscope->top;
 	sseptr->prev = cscope;
 	cscope = sseptr;
+
+	struct ose* oseptr = (struct ose*)malloc(sizeof(struct ose));
+	oseptr->offset = 0;
+	oseptr->prev   = coffset;
+	coffset = oseptr;
 }
 
 struct ste* pop_scope()
@@ -991,6 +699,7 @@ struct decl	*maketypedecl(int typeclass)
 	result->ptrto = NULL;
 	result->scope = NULL;
 	result->next = NULL;
+	result->size = 1;
 
 	return result;
 }
@@ -1128,9 +837,10 @@ struct decl	*makestringconstdecl(struct decl* type, char* value)
 void declare(struct id* idptr, struct decl* declptr)
 {
 	struct ste* entry = (struct ste*)malloc(sizeof(struct ste));
-	entry->name = idptr;
-	entry->decl = declptr;
-	entry->prev = cscope->top;
+	entry->name   = idptr;
+	entry->decl   = declptr;
+	entry->prev   = cscope->top;
+	entry->offset = coffset->offset;
 	cscope->top = entry;
 	return;
 }
@@ -1141,6 +851,11 @@ void init_type()
 	cscope = (struct sse*)malloc(sizeof(struct sse));
 	cscope->prev = NULL;
 	cscope->top = NULL;
+
+	coffset = (struct ose*)malloc(sizeof(struct ose));
+	coffset->offset = 0;
+	coffset->prev = NULL;
+
 	inttype = maketypedecl(INT);
 	chartype = maketypedecl(CHAR);
 	voidtype = maketypedecl(VOID);
@@ -1690,6 +1405,7 @@ void printste(struct ste* start)
 	while(entry)
 	{
 		fprintf(stderr,"pointer: %p\n", entry);
+		fprintf(stderr,"decl pointer: %p\n", entry->decl);
 		fprintf(stderr,"name: %s\n",entry->name->name);
 		fprintf(stderr,"class: %d\n",entry->decl->declclass);
 		fprintf(stderr,"typeclass: %d\n",entry->decl->typeclass);
@@ -1698,5 +1414,4 @@ void printste(struct ste* start)
 	fprintf(stderr,"\n");
 
 }
-
 

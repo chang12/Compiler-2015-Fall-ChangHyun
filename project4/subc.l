@@ -79,6 +79,18 @@ int read_line()
 {
    return lineno;
 }
+
+void write_startup_code()
+{
+	fprintf(codefile, "\tshift_sp 1\n");
+	fprintf(codefile, "\tpush_const EXIT\n");
+	fprintf(codefile, "\tpush_reg fp\n");
+	fprintf(codefile, "\tpush_reg sp\n");
+	fprintf(codefile, "\tpop_reg fp\n");
+	fprintf(codefile, "\tjump main\n");
+	fprintf(codefile, "EXIT:\n");
+	fprintf(codefile, "\texit\n");
+}
    
 int main(int argc, char* argv[])
 {
@@ -97,8 +109,13 @@ int main(int argc, char* argv[])
    if(argc >= 2) 
    {
    	  yyin = fopen(argv[1], "r");
-	  filename = (char*)malloc(sizeof(char)*strlen(argv[1]));
+
+	  filename = (char*)malloc(sizeof(char)*(strlen(argv[1])));
 	  strcpy(filename, argv[1]);
+	  filename[strlen(filename)-1]='s';
+
+	  codefile = fopen(filename, "w");
+	  write_startup_code();
    }
    else 
    {
@@ -112,5 +129,6 @@ int main(int argc, char* argv[])
 	
    yyparse();
    fclose(yyin);
+   fclose(codefile);
    return 0;
 }

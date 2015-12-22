@@ -24,6 +24,7 @@ struct ste {
 	struct id	*name;
 	struct decl	*decl;
 	struct ste	*prev;
+	int			 offset;
 };
 
 struct decl {
@@ -42,14 +43,22 @@ struct decl {
 	struct ste		**scope;		// VAR: scope when VAR declared
 	struct decl		*next;			// For list_of_variables declarations
 									// Or parameter check of function call
+	int				size;			
 };
 
 struct sse {
 	struct ste	*top;
 	struct sse	*prev;
-}; 
+};
+
+struct ose {
+	int 		 offset;
+	struct ose 	*prev;
+};
 
 struct sse* cscope;
+struct ose* coffset;
+char* 		clabel;
 struct id*	returnid;
 struct decl* inttype;
 struct decl* chartype;
@@ -57,6 +66,7 @@ struct decl* stringtype;
 struct decl* voidtype;
 
 char* filename;
+FILE* codefile;
 
 /* 
 	For hash table 
