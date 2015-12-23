@@ -364,7 +364,18 @@ stmt_list
 
 stmt
 		: expr ';'{
-			fprintf(codefile, "\tshift_sp %d\n", -$1->type->size);
+			int sp_shift;
+			if(check_is_ptr($1)) 
+			{
+				yyerror("check1");
+				sp_shift = -$1->type->ptrto->type->size;
+			}
+			else if(check_is_var($1)) 
+			{
+				yyerror("check2");
+				sp_shift = -$1->type->size;
+			}
+			fprintf(codefile, "\tshift_sp %d\n", sp_shift);
 		}
 		| compound_stmt{
 		}
@@ -427,11 +438,6 @@ expr
 		}
 		| or_expr{
 			$$ = $1;
-			// RHS가 VAR라면, expr - 값 대응관계를 유지하기 위해서 fetch를 해줘야 한다.
-			if(check_is_var($1))
-			{
-				fprintf(codefile, "\tfetch\n");
-			}
 		}
 		;
 
@@ -480,6 +486,12 @@ binary
 		}
 		| unary %prec '='{
 			$$ = $1;
+			// unary가 VAR라면 이 시점에서 fetch 해줘야한다.
+			// 이 시점 윗단에서는 대응되는 값이 올려져있어야 하기 때문이다.
+			if(check_is_var($1))
+			{
+				fprintf(codefile, "\tfetch\n");
+			}
 		}
 		;
 
@@ -504,7 +516,7 @@ unary
 		| ID{
 			REDUCE("unary -> ID");
 			$$ = findwholedecl($1);
-			$$->declclass = VAR;
+			// $$->declclass = VAR;
 			// ID로 REDUCE 되는 경우에는, ID가 담겨있는 주소값(정수)를 올려놓는다.
 			fprintf(codefile, "\tpush_reg fp\n");
 			fprintf(codefile, "\tpush_const %d\n", 1 + $$->offset);
@@ -576,6 +588,11 @@ unary
 		}
 		| '*' unary	%prec '!'{
 			$$ = $2->type->ptrto;
+			// int *i;
+			// *i = 10; 이런건 가능했잖아?
+			// 그러면 $$를 CONST로 강제할 것이 아니라, 그대로 둬야 한다.
+			// 단지 fetch 만 한번 해둘 뿐이다.
+			fprintf(codefile, "\tfetch\n");
 		}
 		| unary '[' expr ']'{
 			// RHS의 unary는 const 이고, type의 typeclass는 array 인가?
@@ -1018,8 +1035,9 @@ struct decl* checkINCOPDECOP(struct decl* target)
 	{
 		// 한번 INCOP, DECOP를 거치고 나면 const 로 취급받아야한다.
 		// 예를 들어 ++a = 17; 이런 statement를 reject 해야하기 때문이다.
-		target->declclass = CONST;
-		return target;
+		struct decl* result = makeconstdecl(target->type);
+		result->offset = target->offset;
+		return result;
 	}
 	else return NULL;
 }

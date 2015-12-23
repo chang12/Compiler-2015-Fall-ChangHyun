@@ -477,12 +477,12 @@ static const yytype_uint16 yyrline[] =
        0,    58,    58,    62,    63,    67,    83,   102,   105,   107,
      114,   118,   121,   128,   127,   136,   143,   164,   182,   182,
      216,   219,   225,   228,   234,   252,   278,   279,   283,   299,
-     320,   321,   325,   339,   325,   354,   359,   361,   366,   369,
-     371,   373,   375,   377,   379,   381,   383,   385,   387,   389,
-     392,   395,   404,   406,   411,   417,   417,   428,   439,   445,
-     448,   454,   460,   463,   469,   472,   475,   478,   481,   487,
-     490,   493,   498,   501,   504,   513,   517,   521,   535,   549,
-     562,   574,   577,   580,   586,   589,   592,   596,   602,   605
+     320,   321,   325,   339,   325,   354,   359,   361,   366,   380,
+     382,   384,   386,   388,   390,   392,   394,   396,   398,   400,
+     403,   406,   415,   417,   422,   428,   428,   439,   445,   451,
+     454,   460,   466,   469,   475,   478,   481,   484,   487,   499,
+     502,   505,   510,   513,   516,   525,   529,   533,   547,   561,
+     574,   586,   589,   597,   603,   606,   609,   613,   619,   622
 };
 #endif
 
@@ -1781,142 +1781,153 @@ yyreduce:
   case 38:
 #line 366 "subc.y" /* yacc.c:1646  */
     {
-			fprintf(codefile, "\tshift_sp %d\n", -(yyvsp[-1].declptr)->type->size);
+			int sp_shift;
+			if(check_is_ptr((yyvsp[-1].declptr))) 
+			{
+				yyerror("check1");
+				sp_shift = -(yyvsp[-1].declptr)->type->ptrto->type->size;
+			}
+			else if(check_is_var((yyvsp[-1].declptr))) 
+			{
+				yyerror("check2");
+				sp_shift = -(yyvsp[-1].declptr)->type->size;
+			}
+			fprintf(codefile, "\tshift_sp %d\n", sp_shift);
 		}
-#line 1787 "subc.tab.c" /* yacc.c:1646  */
+#line 1798 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 39:
-#line 369 "subc.y" /* yacc.c:1646  */
+#line 380 "subc.y" /* yacc.c:1646  */
     {
 		}
-#line 1794 "subc.tab.c" /* yacc.c:1646  */
+#line 1805 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 40:
-#line 371 "subc.y" /* yacc.c:1646  */
+#line 382 "subc.y" /* yacc.c:1646  */
     {
 		}
-#line 1801 "subc.tab.c" /* yacc.c:1646  */
+#line 1812 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 41:
-#line 373 "subc.y" /* yacc.c:1646  */
+#line 384 "subc.y" /* yacc.c:1646  */
     {
 		}
-#line 1808 "subc.tab.c" /* yacc.c:1646  */
+#line 1819 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 42:
-#line 375 "subc.y" /* yacc.c:1646  */
+#line 386 "subc.y" /* yacc.c:1646  */
     {
 		}
-#line 1815 "subc.tab.c" /* yacc.c:1646  */
+#line 1826 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 43:
-#line 377 "subc.y" /* yacc.c:1646  */
+#line 388 "subc.y" /* yacc.c:1646  */
     {
 		}
-#line 1822 "subc.tab.c" /* yacc.c:1646  */
+#line 1833 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 44:
-#line 379 "subc.y" /* yacc.c:1646  */
+#line 390 "subc.y" /* yacc.c:1646  */
     {
 		}
-#line 1829 "subc.tab.c" /* yacc.c:1646  */
+#line 1840 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 45:
-#line 381 "subc.y" /* yacc.c:1646  */
+#line 392 "subc.y" /* yacc.c:1646  */
     {
 		}
-#line 1836 "subc.tab.c" /* yacc.c:1646  */
+#line 1847 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 46:
-#line 383 "subc.y" /* yacc.c:1646  */
+#line 394 "subc.y" /* yacc.c:1646  */
     {
 		}
-#line 1843 "subc.tab.c" /* yacc.c:1646  */
+#line 1854 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 47:
-#line 385 "subc.y" /* yacc.c:1646  */
+#line 396 "subc.y" /* yacc.c:1646  */
     {
 		}
-#line 1850 "subc.tab.c" /* yacc.c:1646  */
+#line 1861 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 48:
-#line 387 "subc.y" /* yacc.c:1646  */
+#line 398 "subc.y" /* yacc.c:1646  */
     {
 		}
-#line 1857 "subc.tab.c" /* yacc.c:1646  */
+#line 1868 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 49:
-#line 389 "subc.y" /* yacc.c:1646  */
+#line 400 "subc.y" /* yacc.c:1646  */
     {
 			printste(cscope->top);
 		}
-#line 1865 "subc.tab.c" /* yacc.c:1646  */
+#line 1876 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 50:
-#line 392 "subc.y" /* yacc.c:1646  */
+#line 403 "subc.y" /* yacc.c:1646  */
     {
 			fprintf(codefile, "\twrite_int\n");
 		}
-#line 1873 "subc.tab.c" /* yacc.c:1646  */
+#line 1884 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 51:
-#line 395 "subc.y" /* yacc.c:1646  */
+#line 406 "subc.y" /* yacc.c:1646  */
     {
 			fprintf(codefile, "str_%d. string %s\n", cstring, (yyvsp[-1].stringval));
 			fprintf(codefile, "\tpush_const str_%d\n", cstring);
 			fprintf(codefile, "\twrite_string\n");
 			cstring++;
 		}
-#line 1884 "subc.tab.c" /* yacc.c:1646  */
+#line 1895 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 52:
-#line 404 "subc.y" /* yacc.c:1646  */
+#line 415 "subc.y" /* yacc.c:1646  */
     {
 		}
-#line 1891 "subc.tab.c" /* yacc.c:1646  */
+#line 1902 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 53:
-#line 406 "subc.y" /* yacc.c:1646  */
+#line 417 "subc.y" /* yacc.c:1646  */
     {
 		}
-#line 1898 "subc.tab.c" /* yacc.c:1646  */
+#line 1909 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 54:
-#line 411 "subc.y" /* yacc.c:1646  */
+#line 422 "subc.y" /* yacc.c:1646  */
     {
 			(yyval.declptr) = (yyvsp[0].declptr);
 		}
-#line 1906 "subc.tab.c" /* yacc.c:1646  */
+#line 1917 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 55:
-#line 417 "subc.y" /* yacc.c:1646  */
+#line 428 "subc.y" /* yacc.c:1646  */
     {
 			// unary에 값을 assign 할 것이므로, 현재 stack top을 복사해둔다.
 			fprintf(codefile, "\tpush_reg sp\n");
 			fprintf(codefile, "\tfetch\n");
 		}
-#line 1916 "subc.tab.c" /* yacc.c:1646  */
+#line 1927 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 56:
-#line 421 "subc.y" /* yacc.c:1646  */
+#line 432 "subc.y" /* yacc.c:1646  */
     {
 			(yyval.declptr) = (yyvsp[-3].declptr);
 			// assign 하고 나서는 expr 이므로 값을 위에 띄울 것이다.
@@ -1924,186 +1935,187 @@ yyreduce:
 			fprintf(codefile, "\tassign\n");
 			fprintf(codefile, "\tfetch\n");
 		}
-#line 1928 "subc.tab.c" /* yacc.c:1646  */
+#line 1939 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 57:
-#line 428 "subc.y" /* yacc.c:1646  */
+#line 439 "subc.y" /* yacc.c:1646  */
     {
 			(yyval.declptr) = (yyvsp[0].declptr);
-			// RHS가 VAR라면, expr - 값 대응관계를 유지하기 위해서 fetch를 해줘야 한다.
+		}
+#line 1947 "subc.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 58:
+#line 445 "subc.y" /* yacc.c:1646  */
+    {
+			(yyval.declptr) = (yyvsp[0].declptr);
+		}
+#line 1955 "subc.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 59:
+#line 451 "subc.y" /* yacc.c:1646  */
+    {
+			(yyval.declptr) = logicaltype((yyvsp[-2].declptr), (yyvsp[0].declptr));
+		}
+#line 1963 "subc.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 60:
+#line 454 "subc.y" /* yacc.c:1646  */
+    {
+			(yyval.declptr) = (yyvsp[0].declptr);
+		}
+#line 1971 "subc.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 61:
+#line 460 "subc.y" /* yacc.c:1646  */
+    {
+			(yyval.declptr) = (yyvsp[0].declptr);
+		}
+#line 1979 "subc.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 62:
+#line 466 "subc.y" /* yacc.c:1646  */
+    {
+			(yyval.declptr) = logicaltype((yyvsp[-2].declptr), (yyvsp[0].declptr));
+		}
+#line 1987 "subc.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 63:
+#line 469 "subc.y" /* yacc.c:1646  */
+    {
+			(yyval.declptr) = (yyvsp[0].declptr);
+		}
+#line 1995 "subc.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 64:
+#line 475 "subc.y" /* yacc.c:1646  */
+    {
+			(yyval.declptr) = optype((yyvsp[-2].declptr), (yyvsp[0].declptr));
+		}
+#line 2003 "subc.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 65:
+#line 478 "subc.y" /* yacc.c:1646  */
+    {
+			(yyval.declptr) = optype((yyvsp[-2].declptr), (yyvsp[0].declptr));
+		}
+#line 2011 "subc.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 66:
+#line 481 "subc.y" /* yacc.c:1646  */
+    {
+			(yyval.declptr) = plustype((yyvsp[-2].declptr), (yyvsp[0].declptr));
+		}
+#line 2019 "subc.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 67:
+#line 484 "subc.y" /* yacc.c:1646  */
+    {
+			(yyval.declptr) = minustype((yyvsp[-2].declptr), (yyvsp[0].declptr));
+		}
+#line 2027 "subc.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 68:
+#line 487 "subc.y" /* yacc.c:1646  */
+    {
+			(yyval.declptr) = (yyvsp[0].declptr);
+			// unary가 VAR라면 이 시점에서 fetch 해줘야한다.
+			// 이 시점 윗단에서는 대응되는 값이 올려져있어야 하기 때문이다.
 			if(check_is_var((yyvsp[0].declptr)))
 			{
 				fprintf(codefile, "\tfetch\n");
 			}
 		}
-#line 1941 "subc.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 58:
-#line 439 "subc.y" /* yacc.c:1646  */
-    {
-			(yyval.declptr) = (yyvsp[0].declptr);
-		}
-#line 1949 "subc.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 59:
-#line 445 "subc.y" /* yacc.c:1646  */
-    {
-			(yyval.declptr) = logicaltype((yyvsp[-2].declptr), (yyvsp[0].declptr));
-		}
-#line 1957 "subc.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 60:
-#line 448 "subc.y" /* yacc.c:1646  */
-    {
-			(yyval.declptr) = (yyvsp[0].declptr);
-		}
-#line 1965 "subc.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 61:
-#line 454 "subc.y" /* yacc.c:1646  */
-    {
-			(yyval.declptr) = (yyvsp[0].declptr);
-		}
-#line 1973 "subc.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 62:
-#line 460 "subc.y" /* yacc.c:1646  */
-    {
-			(yyval.declptr) = logicaltype((yyvsp[-2].declptr), (yyvsp[0].declptr));
-		}
-#line 1981 "subc.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 63:
-#line 463 "subc.y" /* yacc.c:1646  */
-    {
-			(yyval.declptr) = (yyvsp[0].declptr);
-		}
-#line 1989 "subc.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 64:
-#line 469 "subc.y" /* yacc.c:1646  */
-    {
-			(yyval.declptr) = optype((yyvsp[-2].declptr), (yyvsp[0].declptr));
-		}
-#line 1997 "subc.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 65:
-#line 472 "subc.y" /* yacc.c:1646  */
-    {
-			(yyval.declptr) = optype((yyvsp[-2].declptr), (yyvsp[0].declptr));
-		}
-#line 2005 "subc.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 66:
-#line 475 "subc.y" /* yacc.c:1646  */
-    {
-			(yyval.declptr) = plustype((yyvsp[-2].declptr), (yyvsp[0].declptr));
-		}
-#line 2013 "subc.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 67:
-#line 478 "subc.y" /* yacc.c:1646  */
-    {
-			(yyval.declptr) = minustype((yyvsp[-2].declptr), (yyvsp[0].declptr));
-		}
-#line 2021 "subc.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 68:
-#line 481 "subc.y" /* yacc.c:1646  */
-    {
-			(yyval.declptr) = (yyvsp[0].declptr);
-		}
-#line 2029 "subc.tab.c" /* yacc.c:1646  */
+#line 2041 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 69:
-#line 487 "subc.y" /* yacc.c:1646  */
+#line 499 "subc.y" /* yacc.c:1646  */
     {
 			(yyval.declptr) = (yyvsp[-1].declptr);
 		}
-#line 2037 "subc.tab.c" /* yacc.c:1646  */
+#line 2049 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 70:
-#line 490 "subc.y" /* yacc.c:1646  */
+#line 502 "subc.y" /* yacc.c:1646  */
     {
 			(yyval.declptr) = (yyvsp[-1].declptr);
 		}
-#line 2045 "subc.tab.c" /* yacc.c:1646  */
+#line 2057 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 71:
-#line 493 "subc.y" /* yacc.c:1646  */
+#line 505 "subc.y" /* yacc.c:1646  */
     {
 			(yyval.declptr) = makenumconstdecl(inttype, (yyvsp[0].intval));
 			// INTEGER_CONST로 REDUCE 되는 경우에는, 해당 값을 올려놓는다.
 			fprintf(codefile, "\tpush_const %d\n", (yyvsp[0].intval));
 		}
-#line 2055 "subc.tab.c" /* yacc.c:1646  */
+#line 2067 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 72:
-#line 498 "subc.y" /* yacc.c:1646  */
+#line 510 "subc.y" /* yacc.c:1646  */
     {
 			(yyval.declptr) = makecharconstdecl(chartype, (yyvsp[0].stringval));
 		}
-#line 2063 "subc.tab.c" /* yacc.c:1646  */
+#line 2075 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 73:
-#line 501 "subc.y" /* yacc.c:1646  */
+#line 513 "subc.y" /* yacc.c:1646  */
     {
 			(yyval.declptr) = makestringconstdecl(stringtype, (yyvsp[0].stringval));
 		}
-#line 2071 "subc.tab.c" /* yacc.c:1646  */
+#line 2083 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 74:
-#line 504 "subc.y" /* yacc.c:1646  */
+#line 516 "subc.y" /* yacc.c:1646  */
     {
 			REDUCE("unary -> ID");
 			(yyval.declptr) = findwholedecl((yyvsp[0].idptr));
-			(yyval.declptr)->declclass = VAR;
+			// $$->declclass = VAR;
 			// ID로 REDUCE 되는 경우에는, ID가 담겨있는 주소값(정수)를 올려놓는다.
 			fprintf(codefile, "\tpush_reg fp\n");
 			fprintf(codefile, "\tpush_const %d\n", 1 + (yyval.declptr)->offset);
 			fprintf(codefile, "\tadd\n");
 		}
-#line 2085 "subc.tab.c" /* yacc.c:1646  */
+#line 2097 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 75:
-#line 513 "subc.y" /* yacc.c:1646  */
+#line 525 "subc.y" /* yacc.c:1646  */
     {
 			// $2 는 type이 inttype 이어야 한다.
 			(yyval.declptr) = (yyvsp[0].declptr);
 		}
-#line 2094 "subc.tab.c" /* yacc.c:1646  */
+#line 2106 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 76:
-#line 517 "subc.y" /* yacc.c:1646  */
+#line 529 "subc.y" /* yacc.c:1646  */
     {
 			// $2 는 type이 inttype 이어야 한다.
 			(yyval.declptr) = (yyvsp[0].declptr);
 		}
-#line 2103 "subc.tab.c" /* yacc.c:1646  */
+#line 2115 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 77:
-#line 521 "subc.y" /* yacc.c:1646  */
+#line 533 "subc.y" /* yacc.c:1646  */
     {
 			(yyval.declptr) = checkINCOPDECOP((yyvsp[-1].declptr));
 			fprintf(codefile, "\tpush_reg sp\n");
@@ -2118,11 +2130,11 @@ yyreduce:
 			fprintf(codefile, "\tpush_const 1\n");
 			fprintf(codefile, "\tsub\n");
 		}
-#line 2122 "subc.tab.c" /* yacc.c:1646  */
+#line 2134 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 78:
-#line 535 "subc.y" /* yacc.c:1646  */
+#line 547 "subc.y" /* yacc.c:1646  */
     {
 			(yyval.declptr) = checkINCOPDECOP((yyvsp[-1].declptr));
 			fprintf(codefile, "\tpush_reg sp\n");
@@ -2137,11 +2149,11 @@ yyreduce:
 			fprintf(codefile, "\tpush_const 1\n");
 			fprintf(codefile, "\tadd\n");
 		}
-#line 2141 "subc.tab.c" /* yacc.c:1646  */
+#line 2153 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 79:
-#line 549 "subc.y" /* yacc.c:1646  */
+#line 561 "subc.y" /* yacc.c:1646  */
     {
 			REDUCE("unary -> INCOP unary");
 			(yyval.declptr) = checkINCOPDECOP((yyvsp[0].declptr));
@@ -2155,11 +2167,11 @@ yyreduce:
 			fprintf(codefile, "\tassign\n");
 			fprintf(codefile, "\tfetch\n");
 		}
-#line 2159 "subc.tab.c" /* yacc.c:1646  */
+#line 2171 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 80:
-#line 562 "subc.y" /* yacc.c:1646  */
+#line 574 "subc.y" /* yacc.c:1646  */
     {
 			(yyval.declptr) = checkINCOPDECOP((yyvsp[0].declptr));
 			fprintf(codefile, "\tpush_reg sp\n");
@@ -2172,88 +2184,93 @@ yyreduce:
 			fprintf(codefile, "\tassign\n");
 			fprintf(codefile, "\tfetch\n");
 		}
-#line 2176 "subc.tab.c" /* yacc.c:1646  */
+#line 2188 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 81:
-#line 574 "subc.y" /* yacc.c:1646  */
+#line 586 "subc.y" /* yacc.c:1646  */
     {
 			(yyval.declptr) = makeconstdecl(makeptrdecl((yyvsp[0].declptr)));
 		}
-#line 2184 "subc.tab.c" /* yacc.c:1646  */
+#line 2196 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 82:
-#line 577 "subc.y" /* yacc.c:1646  */
+#line 589 "subc.y" /* yacc.c:1646  */
     {
 			(yyval.declptr) = (yyvsp[0].declptr)->type->ptrto;
+			// int *i;
+			// *i = 10; 이런건 가능했잖아?
+			// 그러면 $$를 CONST로 강제할 것이 아니라, 그대로 둬야 한다.
+			// 단지 fetch 만 한번 해둘 뿐이다.
+			fprintf(codefile, "\tfetch\n");
 		}
-#line 2192 "subc.tab.c" /* yacc.c:1646  */
+#line 2209 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 83:
-#line 580 "subc.y" /* yacc.c:1646  */
+#line 597 "subc.y" /* yacc.c:1646  */
     {
 			// RHS의 unary는 const 이고, type의 typeclass는 array 인가?
 			// expr는 int type VAR 이거나, INT_CONST 인가?
 			// 조건을 충족한다면, elementvar로 VAR을 넘겨준다.
 			(yyval.declptr) = arrayaccess((yyvsp[-3].declptr), (yyvsp[-1].declptr));
 		}
-#line 2203 "subc.tab.c" /* yacc.c:1646  */
+#line 2220 "subc.tab.c" /* yacc.c:1646  */
     break;
 
   case 84:
-#line 586 "subc.y" /* yacc.c:1646  */
+#line 603 "subc.y" /* yacc.c:1646  */
     {
 			(yyval.declptr) = structaccess((yyvsp[-2].declptr), (yyvsp[0].idptr));
-		}
-#line 2211 "subc.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 85:
-#line 589 "subc.y" /* yacc.c:1646  */
-    {
-			(yyval.declptr) = structptraccess((yyvsp[-2].declptr), (yyvsp[0].idptr));
-		}
-#line 2219 "subc.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 86:
-#line 592 "subc.y" /* yacc.c:1646  */
-    {
-			yyerror("check function call");
-			(yyval.declptr) = check_funccall((yyvsp[-3].declptr), (yyvsp[-1].declptr));
 		}
 #line 2228 "subc.tab.c" /* yacc.c:1646  */
     break;
 
-  case 87:
-#line 596 "subc.y" /* yacc.c:1646  */
+  case 85:
+#line 606 "subc.y" /* yacc.c:1646  */
     {
-			(yyval.declptr) = check_funccall((yyvsp[-2].declptr), NULL);
+			(yyval.declptr) = structptraccess((yyvsp[-2].declptr), (yyvsp[0].idptr));
 		}
 #line 2236 "subc.tab.c" /* yacc.c:1646  */
     break;
 
-  case 88:
-#line 602 "subc.y" /* yacc.c:1646  */
+  case 86:
+#line 609 "subc.y" /* yacc.c:1646  */
     {
-			(yyval.declptr) = copydecl((yyvsp[0].declptr));
+			yyerror("check function call");
+			(yyval.declptr) = check_funccall((yyvsp[-3].declptr), (yyvsp[-1].declptr));
 		}
-#line 2244 "subc.tab.c" /* yacc.c:1646  */
+#line 2245 "subc.tab.c" /* yacc.c:1646  */
     break;
 
-  case 89:
-#line 605 "subc.y" /* yacc.c:1646  */
+  case 87:
+#line 613 "subc.y" /* yacc.c:1646  */
     {
-			(yyvsp[-2].declptr)->next = (yyvsp[0].declptr);
-			(yyval.declptr) = (yyvsp[-2].declptr);
+			(yyval.declptr) = check_funccall((yyvsp[-2].declptr), NULL);
 		}
 #line 2253 "subc.tab.c" /* yacc.c:1646  */
     break;
 
+  case 88:
+#line 619 "subc.y" /* yacc.c:1646  */
+    {
+			(yyval.declptr) = copydecl((yyvsp[0].declptr));
+		}
+#line 2261 "subc.tab.c" /* yacc.c:1646  */
+    break;
 
-#line 2257 "subc.tab.c" /* yacc.c:1646  */
+  case 89:
+#line 622 "subc.y" /* yacc.c:1646  */
+    {
+			(yyvsp[-2].declptr)->next = (yyvsp[0].declptr);
+			(yyval.declptr) = (yyvsp[-2].declptr);
+		}
+#line 2270 "subc.tab.c" /* yacc.c:1646  */
+    break;
+
+
+#line 2274 "subc.tab.c" /* yacc.c:1646  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -2481,7 +2498,7 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 611 "subc.y" /* yacc.c:1906  */
+#line 628 "subc.y" /* yacc.c:1906  */
 
 
 /*  Additional C Codes 
@@ -2892,8 +2909,9 @@ struct decl* checkINCOPDECOP(struct decl* target)
 	{
 		// 한번 INCOP, DECOP를 거치고 나면 const 로 취급받아야한다.
 		// 예를 들어 ++a = 17; 이런 statement를 reject 해야하기 때문이다.
-		target->declclass = CONST;
-		return target;
+		struct decl* result = makeconstdecl(target->type);
+		result->offset = target->offset;
+		return result;
 	}
 	else return NULL;
 }

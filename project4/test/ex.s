@@ -7,11 +7,34 @@
 EXIT:
 	exit
 main:
-	shift_sp 0
+	shift_sp 2
 main_start:
-str_0. string "abcd\n"
-	push_const str_0
-	write_string
+	push_reg fp
+	push_const 1
+	add
+	push_reg sp
+	fetch
+	push_const 10
+	assign
+	fetch
+	shift_sp -1
+	push_reg fp
+	push_const 2
+	add
+	push_reg sp
+	fetch
+	push_reg fp
+	push_const 1
+	add
+	assign
+	fetch
+	shift_sp -1
+	push_reg fp
+	push_const 2
+	add
+	fetch
+	fetch
+	write_int
 main_final:
 	push_reg fp
 	pop_reg sp
