@@ -112,7 +112,6 @@ ext_def
 
 type_specifier
 		: TYPE{
-			REDUCE("type_specifier -> TYPE");
 			if(!strcmp($1->name,"int")) $$ = inttype;
 			else if(!strcmp($1->name,"char")) $$ = chartype;
 		}
@@ -144,7 +143,6 @@ func_decl
 		: type_specifier pointers ID '(' ')'{
 			fprintf(codefile, "%s:\n", $3->name);
 			clabel = $3->name;
-			REDUCE("func_decl -> type_specifier pointers ID '(' ')'");
 			// function을 정의하면서, 선언까지 함께 해주기 때문에
 			// 당연히 존재하지 않는 func 이름일 것이다.
 
@@ -283,7 +281,6 @@ def_list    /* list of definitions, definition can be type(struct), variable, fu
 
 def
 		: type_specifier pointers ID ';'{
-			REDUCE("def -> type_specifier pointers ID");
 		
 			if($2)
 			{
@@ -378,7 +375,6 @@ stmt
 		| ';'{
 		}
 		| IF '(' expr ')' stmt{
-			yyerror("check IF stmt");
 		}
 		| IF '(' expr ')' stmt ELSE stmt{
 		}
@@ -418,6 +414,8 @@ expr
 			fprintf(codefile, "\tfetch\n");
 		} expr{
 			$$ = $1;
+			// assign 하고 나서는 expr 이므로 값을 위에 띄울 것이다.
+			// 그러므로 fetch 해준다.
 			fprintf(codefile, "\tassign\n");
 			fprintf(codefile, "\tfetch\n");
 		}
@@ -498,7 +496,9 @@ unary
 			$$ = makestringconstdecl(stringtype, $1);
 		}
 		| ID{
+			REDUCE("unary -> ID");
 			$$ = findwholedecl($1);
+			$$->declclass = VAR;
 			// ID로 REDUCE 되는 경우에는, ID가 담겨있는 주소값(정수)를 올려놓는다.
 			fprintf(codefile, "\tpush_reg fp\n");
 			fprintf(codefile, "\tpush_const %d\n", 1 + $$->offset);
@@ -513,16 +513,35 @@ unary
 			$$ = $2;
 		}
 		| unary INCOP{
-			if(!($$=checkINCOPDECOP($1))) yyerror("error: not char,int,ptr");
+			$$ = checkINCOPDECOP($1);
 		}
 		| unary DECOP{
-			if(!($$=checkINCOPDECOP($1))) yyerror("error: not char,int,ptr");
+			$$ = checkINCOPDECOP($1);
 		}
 		| INCOP unary{
-			if(!($$=checkINCOPDECOP($2))) yyerror("error: not char,int,ptr");
+			REDUCE("unary -> INCOP unary");
+			$$ = checkINCOPDECOP($2);
+			fprintf(codefile, "\tpush_reg sp\n");
+			fprintf(codefile, "\tfetch\n");
+			fprintf(codefile, "\tpush_reg sp\n");
+			fprintf(codefile, "\tfetch\n");
+			fprintf(codefile, "\tfetch\n");
+			fprintf(codefile, "\tpush_const 1\n");
+			fprintf(codefile, "\tadd\n");
+			fprintf(codefile, "\tassign\n");
+			fprintf(codefile, "\tfetch\n");
 		}
 		| DECOP unary{
-			if(!($$=checkINCOPDECOP($2))) yyerror("error: not char,int,ptr");
+			$$ = checkINCOPDECOP($2);
+			fprintf(codefile, "\tpush_reg sp\n");
+			fprintf(codefile, "\tfetch\n");
+			fprintf(codefile, "\tpush_reg sp\n");
+			fprintf(codefile, "\tfetch\n");
+			fprintf(codefile, "\tfetch\n");
+			fprintf(codefile, "\tpush_const 1\n");
+			fprintf(codefile, "\tsub\n");
+			fprintf(codefile, "\tassign\n");
+			fprintf(codefile, "\tfetch\n");
 		}
 		| '&' unary	%prec '!'{
 			$$ = makeconstdecl(makeptrdecl($2));
@@ -965,7 +984,13 @@ struct decl* checkINCOPDECOP(struct decl* target)
 	bool isInt = (target->type==inttype);
 	bool isChar = (target->type==chartype);
 	bool isPtr = (target->type->typeclass==PTR);
-	if(isInt || isChar || isPtr) return target;
+	if(isInt || isChar || isPtr)
+	{
+		// 한번 INCOP, DECOP를 거치고 나면 const 로 취급받아야한다.
+		// 예를 들어 ++a = 17; 이런 statement를 reject 해야하기 때문이다.
+		target->declclass = CONST;
+		return target;
+	}
 	else return NULL;
 }
 

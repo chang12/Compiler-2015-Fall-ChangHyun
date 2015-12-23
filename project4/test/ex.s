@@ -21,6 +21,14 @@ main_start:
 	push_reg fp
 	push_const 1
 	add
+	push_reg sp
+	fetch
+	push_reg sp
+	fetch
+	fetch
+	push_const 1
+	add
+	assign
 	fetch
 	write_int
 main_final:

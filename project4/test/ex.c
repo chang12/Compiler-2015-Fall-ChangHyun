@@ -3,5 +3,5 @@ int main(){
 	int j;
 
 	i = 17;
-	write_int(i);
+	write_int(++i);
 }
