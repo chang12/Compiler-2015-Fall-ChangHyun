@@ -160,6 +160,7 @@ func_decl
 				declare($3, funcdecl);
 				$$ = funcdecl;
 			}
+			$$->size = 0;
 		}
 		| type_specifier pointers ID '(' VOID ')'{
 
@@ -177,12 +178,13 @@ func_decl
 				declare($3, funcdecl);
 				$$ = funcdecl;
 			}
+			$$->size = 0;
 
 		}
 		| type_specifier pointers ID '(' {
 			
 			// FUNC declare 는 param_list 를 확인한 뒤로 미룬다
-			struct decl* funcdecl = NULL;
+			// struct decl* funcdecl = NULL;
 			struct decl* returntypedecl = NULL;
 
 			if($2) 
@@ -201,11 +203,15 @@ func_decl
 		}
 		  param_list ')'{
 
+		  	// func_decl NEED size!!!
+			int temp = coffset->offset;
+
 			struct ste*	formals = pop_scope();
 			connectdecl(formals);
 			struct decl* funcdecl = $<declptr>5;
 
 			funcdecl->formals = formals->prev;
+			funcdecl->size = temp;
 			$$ = funcdecl;
 			declare($3, funcdecl);
 
@@ -692,6 +698,10 @@ struct ste* pop_scope()
 	}
 	free(dummy);
 
+	struct ose* temp2 = coffset;
+	coffset = coffset->prev;
+	free(temp2);
+
 	return result;
 }
 
@@ -723,6 +733,7 @@ struct decl* makevardecl(struct decl* type)
 	result->scope = NULL;
 	result->next = NULL;
 
+	result->size = type->size;
 	result->offset = coffset->offset;
 
 	return result;
@@ -730,6 +741,7 @@ struct decl* makevardecl(struct decl* type)
 
 struct decl* makeptrdecl(struct decl* ptrtodecl)
 {
+	//PTR SIZE = 1
 	struct decl* result = (struct decl*)malloc(sizeof(struct decl));
 	result->declclass = TYPE;
 	result->type = NULL;
@@ -745,6 +757,8 @@ struct decl* makeptrdecl(struct decl* ptrtodecl)
 	result->ptrto = ptrtodecl;
 	result->scope = NULL;
 	result->next = NULL;
+
+	result->size = 1;
 
 	return result;
 }
@@ -943,6 +957,7 @@ void init_type()
 	coffset->offset = 0;
 	coffset->prev = NULL;
 
+	clabelnum = 0;
 	cstring = 0;
 
 	inttype = maketypedecl(INT);

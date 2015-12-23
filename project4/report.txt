@@ -42,3 +42,16 @@ argv[1]로 들어오는 인자는 ---.c 의 형태라고 가정한다.
 	간편하게 추가해보았다.
 	그리고 딱 알맞게 STRING을 받아오기 위해서 subc.l 을 수정하였다.
 
+주요 기술 내용 6.
+
+	* unary
+	& unary
+
+	를 처리하다보니 기존에 작성한 코드들의 문제점이 보였다.
+	일단 expr로 올라갈 때가 아니라, unary가 binary로 REDUCE 될 때 VAR인 애들을 체크해줬어야 했다.
+	그리고 checkINCOPDECOP 에서 decl의 declclass 값을 바꿔주고, 다음번에 다시 ID로 검색됬을 때 VAR로 회귀시켜주는 전략은 매우 나쁜 전략이다.
+	대신에 checkINCOPDECOP 에서 constdecl을 하나 새로 만들면서, 이를 반환해준다.
+	그러면 declclass = CONST 이므로 적합한 대접을 받게될 것이다.
+
+	* unary 에 대해서는, 한번 fetch 시켜주는 이슈가 있었다.
+

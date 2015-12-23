@@ -45,6 +45,7 @@ struct decl {
 									// Or parameter check of function call
 	int				size;			
 	int 			offset;
+	char			*funcname;
 };
 
 struct sse {
@@ -60,6 +61,7 @@ struct ose {
 struct sse* cscope;
 struct ose* coffset;
 char* 		clabel;
+int			clabelnum;
 int			cstring;
 struct id*	returnid;
 struct decl* inttype;
