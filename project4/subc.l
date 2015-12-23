@@ -23,6 +23,8 @@ special-char	\\[nt]
 %x COMMENT
 %%
 
+"write_int" 	{ return WRITE_INT; }
+
 {id}	{
 		   struct id *entered  = enter(ID, yytext, yyleng);
 		   yylval.idptr = entered;
@@ -98,8 +100,8 @@ int main(int argc, char* argv[])
    hcreate(101);
 
    // Initialize hash table
-   static char *keyword[] = { "int", "char", "void", "struct", "return", "if", "else", "while", "for", "break", "continue", NULL };
-   static int tokentype[] = { TYPE, TYPE, VOID, STRUCT, RETURN, IF, ELSE, WHILE, FOR, BREAK, CONTINUE, 0 };
+   static char *keyword[] = { "int", "char", "void", "struct", "return", "if", "else", "while", "for", "break", "continue", NULL, "write_int"};
+   static int tokentype[] = { TYPE, TYPE, VOID, STRUCT, RETURN, IF, ELSE, WHILE, FOR, BREAK, CONTINUE, 0, WRITE_INT};
    int i;
    for(i = 0; keyword[i] != NULL; i++)
       enter(tokentype[i], keyword[i], strlen(keyword[i]));

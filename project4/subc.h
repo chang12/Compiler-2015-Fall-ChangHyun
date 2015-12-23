@@ -44,6 +44,7 @@ struct decl {
 	struct decl		*next;			// For list_of_variables declarations
 									// Or parameter check of function call
 	int				size;			
+	int 			offset;
 };
 
 struct sse {
@@ -133,7 +134,12 @@ struct decl* logicaltype(struct decl* op1, struct decl* op2);
 
 void connectdecl(struct ste* start);
 
+void write_assign(struct decl* lhs, struct decl* rhs);
+
 // special function for debugging
 void printste(struct ste* start);
+
+// 프로젝트4 관련 함수들
+void write_assign(struct decl* lhs, struct decl* rhs);
 
 #endif

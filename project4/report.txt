@@ -5,3 +5,21 @@ argv[1]로 들어오는 인자는 ---.c 의 형태라고 가정한다.
 여기에 .s를 붙여서 codefile을 열 수 있다.
 
 
+주요 기술 내용 1.
+
+	unary '=' expr 에서 RHS의 VAR/CONST 여부에 따라서 작성하는 중간 코드가 달라진다.
+
+주요 기술 내용 2.
+
+	unary 는 VAR일 경우는 location, CONST일 경우는 그 값을 가지고 있는다.
+
+	expr로 변할 때는, VAR일 경우에는 fetch해서 값으로 놔두고 시작한다.
+	(expr -> or_expr 이나 expr -> unary '=' expr 에 해당한다)
+
+주요 기술 내용 3.
+
+	stmt -> expr ';'로 expr로써 한 줄이 완벽히 완료되는 경우에는,
+	stack top에 쌓여있는 아이를 무시할 것이기 때문에
+	shift_sp -1 을 해주면 될 텐데...
+	얘가 크기가 몇인지 어떻게 알 수 있을까? 싶다가도
+	expr의 decl의 크기를 보면 알 수 있겠다 싶어진다.

@@ -43,11 +43,12 @@ void 	REDUCE(char* s);
 %right	'!' INCOP DECOP
 %right 	'[' ']' '(' ')' '.' ELSE
 %left STRUCTOP
+%left WRITE_INT
 
 /* Token and Types */
 %type<boolval>		pointers param_list
 %type<declptr>		type_specifier struct_specifier expr or_expr or_list and_expr and_list binary unary const_expr func_decl param_decl args
-%token<idptr> 		TYPE VOID STRUCT RETURN IF ELSE WHILE FOR BREAK CONTINUE ID
+%token<idptr> 		TYPE VOID STRUCT RETURN IF ELSE WHILE FOR BREAK CONTINUE ID WRITE_INT
 %token				PRINT
 %token<stringval>	CHAR_CONST STRING STRUCTOP LOGICAL_OR LOGICAL_AND RELOP EQUOP INCOP DECOP
 %token<intval>		INTEGER_CONST
@@ -160,7 +161,6 @@ func_decl
 				funcdecl = makefuncdecl($1);
 				declare($3, funcdecl);
 				$$ = funcdecl;
-				fprintf(stderr,"%p\n",$$);
 			}
 		}
 		| type_specifier pointers ID '(' VOID ')'{
@@ -367,6 +367,7 @@ stmt_list
 
 stmt
 		: expr ';'{
+			fprintf(codefile, "\tshift_sp %d\n", -$1->type->size);
 		}
 		| compound_stmt{
 		}
@@ -377,6 +378,7 @@ stmt
 		| ';'{
 		}
 		| IF '(' expr ')' stmt{
+			yyerror("check IF stmt");
 		}
 		| IF '(' expr ')' stmt ELSE stmt{
 		}
@@ -390,6 +392,9 @@ stmt
 		}
 		| PRINT{
 			printste(cscope->top);
+		}
+		| WRITE_INT '(' expr ')' {
+			fprintf(codefile, "\twrite_int\n");
 		}
 		;
 
@@ -407,11 +412,22 @@ const_expr
 		;
 
 expr
-		: unary '=' expr{
+		: unary '=' {
+			// unary에 값을 assign 할 것이므로, 현재 stack top을 복사해둔다.
+			fprintf(codefile, "\tpush_reg sp\n");
+			fprintf(codefile, "\tfetch\n");
+		} expr{
 			$$ = $1;
+			fprintf(codefile, "\tassign\n");
+			fprintf(codefile, "\tfetch\n");
 		}
 		| or_expr{
 			$$ = $1;
+			// RHS가 VAR라면, expr - 값 대응관계를 유지하기 위해서 fetch를 해줘야 한다.
+			if(check_is_var($1))
+			{
+				fprintf(codefile, "\tfetch\n");
+			}
 		}
 		;
 
@@ -472,6 +488,8 @@ unary
 		} 
 		| INTEGER_CONST{
 			$$ = makenumconstdecl(inttype, $1);
+			// INTEGER_CONST로 REDUCE 되는 경우에는, 해당 값을 올려놓는다.
+			fprintf(codefile, "\tpush_const %d\n", $1);
 		}
 		| CHAR_CONST{
 			$$ = makecharconstdecl(chartype, $1);
@@ -480,8 +498,11 @@ unary
 			$$ = makestringconstdecl(stringtype, $1);
 		}
 		| ID{
-			// ID에 대응되는 decl이 없다면, findcurrentdecl은 NULL을 리턴
 			$$ = findwholedecl($1);
+			// ID로 REDUCE 되는 경우에는, ID가 담겨있는 주소값(정수)를 올려놓는다.
+			fprintf(codefile, "\tpush_reg fp\n");
+			fprintf(codefile, "\tpush_const %d\n", 1 + $$->offset);
+			fprintf(codefile, "\tadd\n");
 		}
 		| '-' unary	%prec '!'{
 			// $2 는 type이 inttype 이어야 한다.
@@ -522,6 +543,7 @@ unary
 			$$ = structptraccess($1, $3);
 		}
 		| unary '(' args ')'{
+			yyerror("check function call");
 			$$ = check_funccall($1, $3);
 		}
 		| unary '(' ')'{
@@ -636,6 +658,8 @@ struct decl* makevardecl(struct decl* type)
 	result->ptrto = NULL;
 	result->scope = NULL;
 	result->next = NULL;
+
+	result->offset = coffset->offset;
 
 	return result;
 }
@@ -840,7 +864,6 @@ void declare(struct id* idptr, struct decl* declptr)
 	entry->name   = idptr;
 	entry->decl   = declptr;
 	entry->prev   = cscope->top;
-	entry->offset = coffset->offset;
 	cscope->top = entry;
 	return;
 }
@@ -1414,4 +1437,18 @@ void printste(struct ste* start)
 	fprintf(stderr,"\n");
 
 }
+
+void write_assign(struct decl* lhs, struct decl* rhs)
+{
+	// push_reg fp
+	// push_const 
+//	fprintf(codefile, "\tpush_reg fp\n");
+//	fprintf(codefile, "\tpush_const %d\n", 1+lhs->offset);
+//	fprintf(codefile, "\tadd\n");
+//	fprintf(codefile, "\tpush_const %d\n", rhs->value);
+//	fprintf(codefile, "\tassign\n");
+//	lhs->value = rhs->value;
+}
+
+
 
