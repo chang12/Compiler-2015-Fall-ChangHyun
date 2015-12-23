@@ -48,7 +48,7 @@ void 	REDUCE(char* s);
 /* Token and Types */
 %type<boolval>		pointers param_list
 %type<declptr>		type_specifier struct_specifier expr or_expr or_list and_expr and_list binary unary const_expr func_decl param_decl args
-%token<idptr> 		TYPE VOID STRUCT RETURN IF ELSE WHILE FOR BREAK CONTINUE ID WRITE_INT
+%token<idptr> 		TYPE VOID STRUCT RETURN IF ELSE WHILE FOR BREAK CONTINUE ID WRITE_INT WRITE_STRING
 %token				PRINT
 %token<stringval>	CHAR_CONST STRING STRUCTOP LOGICAL_OR LOGICAL_AND RELOP EQUOP INCOP DECOP
 %token<intval>		INTEGER_CONST
@@ -392,6 +392,12 @@ stmt
 		| WRITE_INT '(' expr ')' {
 			fprintf(codefile, "\twrite_int\n");
 		}
+		| WRITE_STRING '(' STRING ')'{
+			fprintf(codefile, "str_%d. string %s\n", cstring, $3);
+			fprintf(codefile, "\tpush_const str_%d\n", cstring);
+			fprintf(codefile, "\twrite_string\n");
+			cstring++;
+		}
 		;
 
 expr_e
@@ -514,9 +520,31 @@ unary
 		}
 		| unary INCOP{
 			$$ = checkINCOPDECOP($1);
+			fprintf(codefile, "\tpush_reg sp\n");
+			fprintf(codefile, "\tfetch\n");
+			fprintf(codefile, "\tpush_reg sp\n");
+			fprintf(codefile, "\tfetch\n");
+			fprintf(codefile, "\tfetch\n");
+			fprintf(codefile, "\tpush_const 1\n");
+			fprintf(codefile, "\tadd\n");
+			fprintf(codefile, "\tassign\n");
+			fprintf(codefile, "\tfetch\n");
+			fprintf(codefile, "\tpush_const 1\n");
+			fprintf(codefile, "\tsub\n");
 		}
 		| unary DECOP{
 			$$ = checkINCOPDECOP($1);
+			fprintf(codefile, "\tpush_reg sp\n");
+			fprintf(codefile, "\tfetch\n");
+			fprintf(codefile, "\tpush_reg sp\n");
+			fprintf(codefile, "\tfetch\n");
+			fprintf(codefile, "\tfetch\n");
+			fprintf(codefile, "\tpush_const 1\n");
+			fprintf(codefile, "\tsub\n");
+			fprintf(codefile, "\tassign\n");
+			fprintf(codefile, "\tfetch\n");
+			fprintf(codefile, "\tpush_const 1\n");
+			fprintf(codefile, "\tadd\n");
 		}
 		| INCOP unary{
 			REDUCE("unary -> INCOP unary");
@@ -897,6 +925,8 @@ void init_type()
 	coffset = (struct ose*)malloc(sizeof(struct ose));
 	coffset->offset = 0;
 	coffset->prev = NULL;
+
+	cstring = 0;
 
 	inttype = maketypedecl(INT);
 	chartype = maketypedecl(CHAR);

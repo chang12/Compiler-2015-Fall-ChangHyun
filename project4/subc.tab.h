@@ -64,10 +64,11 @@ extern int yydebug;
     BREAK = 274,
     CONTINUE = 275,
     ID = 276,
-    PRINT = 277,
-    CHAR_CONST = 278,
-    STRING = 279,
-    INTEGER_CONST = 280
+    WRITE_STRING = 277,
+    PRINT = 278,
+    CHAR_CONST = 279,
+    STRING = 280,
+    INTEGER_CONST = 281
   };
 #endif
 
@@ -85,7 +86,7 @@ union YYSTYPE
 	struct decl		*declptr;
 	struct ste		*steptr;
 
-#line 89 "subc.tab.h" /* yacc.c:1909  */
+#line 90 "subc.tab.h" /* yacc.c:1909  */
 };
 # define YYSTYPE_IS_TRIVIAL 1
 # define YYSTYPE_IS_DECLARED 1

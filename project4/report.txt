@@ -35,3 +35,10 @@ argv[1]로 들어오는 인자는 ---.c 의 형태라고 가정한다.
 	그러므로 한번 INCOP, DECOP를 거치고 나면 
 	우선 a의 decl의 declclass를 CONST로 바꿔주고,
 	다시 어딘가에서 a를 찾았을 경우에 declclass를 VAR로 바꿔주고나서 시작한다?
+
+주요 기술 내용 5.
+
+	WRITE_STRING 을 처리하기 위한 Grammar 를 추가하였다.
+	간편하게 추가해보았다.
+	그리고 딱 알맞게 STRING을 받아오기 위해서 subc.l 을 수정하였다.
+

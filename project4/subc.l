@@ -24,6 +24,7 @@ special-char	\\[nt]
 %%
 
 "write_int" 	{ return WRITE_INT; }
+"write_string"	{ return WRITE_STRING; }
 
 {id}	{
 		   struct id *entered  = enter(ID, yytext, yyleng);
@@ -53,7 +54,11 @@ special-char	\\[nt]
 
 \"({special-char}|[^\\\"\n])*\"	{
 			/* String Variable */
-		   yylval.stringval = yytext;
+		   //yylval.stringval = yytext;
+
+		   char* temp = (char*)malloc(sizeof(char)*yyleng);
+		   strncpy(temp, yytext, yyleng);
+		   yylval.stringval = temp;
 		   return STRING;
 		}
 '({special-char}|[^\\'\n])'	{
